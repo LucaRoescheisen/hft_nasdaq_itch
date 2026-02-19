@@ -1,4 +1,4 @@
-set proj_name un_risc5
+set proj_name hft
 set part xc7s50csga324-1
 set proj_dir [file normalize "./vivado"]
 set top top

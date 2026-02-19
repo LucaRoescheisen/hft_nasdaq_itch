@@ -1,4 +1,4 @@
-open_project ./vivado/un_risc5.xpr
+open_project ./vivado/hft.xpr
 
 # Always reset failed runs
 reset_run impl_1
