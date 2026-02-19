@@ -1,0 +1,5 @@
+{
+    "key": "ctrl+shift+b",
+    "command": "workbench.action.tasks.Build",
+    "args": "build"
+}
