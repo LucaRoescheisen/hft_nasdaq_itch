@@ -1,4 +1,4 @@
-package stock_dir_pckg
+package message_pckg
 
 typedef enum logic [7:0] {
     //NASDAQ Market
@@ -144,4 +144,11 @@ typedef enum logic [7:0] {
       "N" : return ETP_NOT_INVERSE_ETP;
     endcase
   endfunction
+
+//-----------------------------------------------------------------------------------------//
+
+
+
+
+
 endpackage
