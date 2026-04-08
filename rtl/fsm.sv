@@ -1,5 +1,7 @@
+/*
 module fsm(
   input reset,
+  input clk,
   input [31:0] payload_len,
   output [2:0] state_out
 );
@@ -18,14 +20,14 @@ state_t state, next_state;
 
 always_ff @(posedge clk) begin
   if(reset) state <= IDLE;
-  else : state <= next_state;
+  else  state <= next_state;
 end
 
 always_comb begin
   next_state = state;
   case(state)
     IDLE:    next_state = ETH;
-    ETH:     if(byte_counter == (ETH_LEN - 1)          next_state = IP;
+    ETH:     if(byte_counter == (ETH_LEN - 1))         next_state = IP;
     IP:      if(byte_counter == (ETH_LEN + IP_LEN - 1)) next_state = UDP;
     UDP:     if(byte_counter == (ETH_LEN + IP_LEN + UDP_LEN - 1)) next_state = UDP;
     PAYLOAD: if(byte_counter == (ETH_LEN + IP_LEN + UDP_LEN + payload_len - 1)) next_state = IDLE;
@@ -35,3 +37,4 @@ end
   assign state_out = state;
 
 endmodule
+*/

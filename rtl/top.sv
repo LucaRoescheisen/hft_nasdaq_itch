@@ -1,7 +1,7 @@
 //NOTE ON CURRENT DESIGN : ASSUMPTION  CLK SPEED == INCOMING BYTE SEEED (will update later for more realistic results/methodologies)
 //Syntax note: variables ending with _e are enums
 
-import stock_dir_pckg::*;
+import message_pckg::*;
 module top(
   input clk,
   input reset,
@@ -35,7 +35,7 @@ module top(
 
 
 
-  always_ff @(clk) begin
+  always_ff @(posedge clk) begin
     if(reset) begin
       global_byte_counter <= 0;
       payload_len  <= 0;
@@ -43,7 +43,6 @@ module top(
       decoding_message <= 0;
       message_ended <= 0;
       internal_byte_counter <= 0;
-      internal_message_length <= 0;
     end else begin
       if(global_byte_counter == packet_end) begin  //Reset byte counter at end of packet
         global_byte_counter <= 0;
@@ -93,7 +92,7 @@ module top(
           end
           else if(message_type == STOCK_DIR && decoding_message) begin
             case(internal_byte_counter)
-              1,2: stock_directory_message.dir_stock_locate                     <= {stock_directory_message.stock_locate[7:0], pcap_byte};
+              1,2: stock_directory_message.dir_stock_locate                 <= {stock_directory_message.stock_locate[7:0], pcap_byte};
               3,4: stock_directory_message.tracking_number                  <= {stock_directory_message.tracking_number[7:0], pcap_byte};
               5,6,7,8,9,10: stock_directory_message.time_stamp              <= {stock_directory_message.time_stamp[39:0], pcap_byte};
               11,12,13,14,15,16,17,18: stock_directory_message.stock_symbol <= {stock_directory_message.stock_symbol[55:0], pcap_byte};

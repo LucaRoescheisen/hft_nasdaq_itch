@@ -1,4 +1,4 @@
-package message_pckg
+package message_pckg;
 
 typedef enum logic [7:0] {
     //NASDAQ Market
@@ -63,10 +63,16 @@ typedef enum logic [7:0] {
     ETP_NOT_INVERSE_ETP  = "N"
   } dir_ETP_inverse_indicator_e;
 
+  typedef enum logic [7:0] {
+    BUY  = "B",
+    SELL  = "S"
+  } buy_or_sell_e;
+
 
 //Functions
-  function dir_market_category_e parse_market_category(logic[7:0] byte)
-    case(byte)
+  function dir_market_category_e parse_market_category(input logic[7:0] b);
+    begin
+    case(b)
       "Q" : return NASDAQ_GLOBAL_SELECT_MARKET;
       "G" : return NASDAQ_GLOBAL_MARKET;
       "S" : return NASDAQ_CAPTIAL_MARKET;
@@ -75,12 +81,14 @@ typedef enum logic [7:0] {
       "P" : return NYSE_ARCA;
       "Z" : return BATS_Z_EXCHANGE;
       "V" : return INVERSTORS_EXCHANGE;
-      default: return UNKNOWN_MARKET;
+      default: return UNKNOWN;
     endcase
+    end
   endfunction
 
-  function dir_financial_status_indicator_e parse_financial_status(logic[7:0] byte)
-    case(byte)
+  function dir_financial_status_indicator_e parse_financial_status(input logic[7:0] b);
+  begin
+    case(b)
       "D" : return DEFICIENT;
       "E" : return DELINQUENT;
       "Q" : return BANKRUPT;
@@ -92,57 +100,72 @@ typedef enum logic [7:0] {
       "K" : return DEFICIENT_DELINQUENT_BANKRUPT;
       "C" : return SUSPENDED_FOR_ETP;
       "N" : return NORMAL;
-      default : return " ";
+     // default : return " ";
     endcase
+  end
   endfunction
 
-  function dir_financial_status_indicator_e parse_round_lots_only(logic[7:0] byte)
-    case(byte)
+  function dir_round_lot_size_e parse_round_lots_only(input logic[7:0] b);
+  begin
+    case(b)
       "Y" : return ACCEPTS_ROUND_LOTS;
       "N" : return NO_ORDER_SIZE_RESTRICTION;
     endcase
+  end
   endfunction
 
-  function dir_authenticity_e parse_authenticity(logic[7:0] byte)
-    case(byte)
+  function dir_authenticity_e parse_authenticity(input logic[7:0] b);
+  begin
+    case(b)
       "P" : return LIVE_PRODUCTION;
       "T" : return TEST;
     endcase
+  end
   endfunction
 
-    function dir_short_sale_threshold_indicator_e parse_SST_Indicator(logic[7:0] byte)
-    case(byte)
+    function dir_short_sale_threshold_indicator_e parse_SST_Indicator(input logic[7:0] b);
+    begin
+    case(b)
       "P" : return SST_RESTRICTED;
       "T" : return SST_NOT_RESTRICTED;
     endcase
+    end
   endfunction
 
-  function dir_ipo_flag_e parse_IPO_Flag(logic[7:0] byte)
-    case(byte)
+  function dir_ipo_flag_e parse_IPO_Flag(input logic[7:0] b);
+  begin
+    case(b)
       "Y" : return IPO_SECURITY;
       "N" : return NO_IPO_SECURITY;
     endcase
+  end
   endfunction
 
-  function dir_LULUDReference_Price_Tier_e parse_Price_Tier(logic[7:0] byte)
-    case(byte)
+  function dir_LULUDReference_Price_Tier_e parse_Price_Tier(input logic[7:0] b);
+  begin
+    case(b)
       "1" : return TIER_1;
       "2" : return TIER_2;
     endcase
+  end
   endfunction
 
-  function dir_ETP_flag_e parse_ETP_Flag(logic[7:0] byte)
-    case(byte)
+  function dir_ETP_flag_e parse_ETP_Flag(input logic[7:0] b);
+  begin
+    case(b)
       "Y" : return INSTRUMENT_ETP;
       "N" : return INSTRUMENT_NOT_ETP;
     endcase
+  end
   endfunction
 
-    function dir_ETP_inverse_indicator_e parse_ETP_inverse_indicator(logic[7:0] byte)
-    case(byte)
+    function dir_ETP_inverse_indicator_e parse_ETP_inverse_indicator(input logic[7:0] b);
+    begin
+    case(b)
       "Y" : return ETP_INVERSE_ETP;
       "N" : return ETP_NOT_INVERSE_ETP;
     endcase
+    end
   endfunction
 
 //-----------------------------------------------------------------------------------------//
@@ -162,8 +185,7 @@ typedef enum logic [7:0] {
 
 
   typedef enum logic [2:0] {
-    SYSTEM_EVENT_MESSAGE_LENGTH  = 12,
-    ...
+    SYSTEM_EVENT_MESSAGE_LENGTH  = 12
 
   } message_lengths;
 
@@ -184,7 +206,7 @@ typedef enum logic [7:0] {
     EVENT_START_MARKET   = "Q" ,
     EVENT_END_MARKET     = "M" ,
     EVENT_END_SYSTEM     = "E" ,
-    EVENT_END_MESSAGES   = "C" ,
+    EVENT_END_MESSAGES   = "C"
 
   } system_event_codes_e;
 

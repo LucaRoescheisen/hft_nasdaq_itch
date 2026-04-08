@@ -5,7 +5,7 @@ set top top
 
 create_project $proj_name $proj_dir -part $part -force
 
-add_files [glob ./rtl/*.v]
+add_files [glob ./rtl/*.sv]
 set_property top $top [current_fileset]
 
 add_files -fileset constrs_1 ./constr/Arty-S7-50-Master.xdc
