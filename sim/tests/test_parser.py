@@ -10,10 +10,15 @@ async def simple_test(dut):
 
     print("STARTING TEST")
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
+    await RisingEdge(dut.clk)
+    dut.reset.value = 1
+    await RisingEdge(dut.clk)
+    dut.reset.value = 0
+    await RisingEdge(dut.clk)
     dut.pcap_byte.value = 0xFF
-    await RisingEdge(dut.clk)   # t=10ns, RTL samples 0xFF
+    await RisingEdge(dut.clk)
     dut.pcap_byte.value = 0x11
-    await RisingEdge(dut.clk)   # t=20ns, RTL samples 0x11
+    await RisingEdge(dut.clk)
     dut.pcap_byte.value = 0x22
     await RisingEdge(dut.clk)
     await Timer(100, unit="ns")
