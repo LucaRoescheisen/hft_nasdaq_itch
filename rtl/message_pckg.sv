@@ -1,5 +1,7 @@
 package message_pckg;
 
+parameter [7:0] DEFAULT = 8'hFF;
+
 typedef enum logic [7:0] {
     //NASDAQ Market
     NASDAQ_GLOBAL_SELECT_MARKET = "Q" ,
@@ -26,6 +28,7 @@ typedef enum logic [7:0] {
     DEFICIENT_DELINQUENT_BANKRUPT = "K",
     SUSPENDED_FOR_ETP             = "C",
     NORMAL                        = "N"
+
   } dir_financial_status_indicator_e;
 
   typedef enum logic [7:0] {
@@ -95,12 +98,11 @@ typedef enum logic [7:0] {
       "S" : return SUSPENDED;
       "G" : return DEFICIENT_BANKRUPT;
       "H" : return DEFICIENT_DELINQUENT;
-      "H" : return DELINQUENT_BANKRUPT;
       "J" : return DELINQUENT_BANKRUPT;
       "K" : return DEFICIENT_DELINQUENT_BANKRUPT;
       "C" : return SUSPENDED_FOR_ETP;
       "N" : return NORMAL;
-     // default : return " ";
+      default : return  dir_financial_status_indicator_e'(DEFAULT);
     endcase
   end
   endfunction
@@ -110,6 +112,7 @@ typedef enum logic [7:0] {
     case(b)
       "Y" : return ACCEPTS_ROUND_LOTS;
       "N" : return NO_ORDER_SIZE_RESTRICTION;
+      default : return dir_round_lot_size_e'(DEFAULT);
     endcase
   end
   endfunction
@@ -119,6 +122,7 @@ typedef enum logic [7:0] {
     case(b)
       "P" : return LIVE_PRODUCTION;
       "T" : return TEST;
+      default : return dir_authenticity_e'(DEFAULT);
     endcase
   end
   endfunction
@@ -128,6 +132,7 @@ typedef enum logic [7:0] {
     case(b)
       "P" : return SST_RESTRICTED;
       "T" : return SST_NOT_RESTRICTED;
+      default : return dir_short_sale_threshold_indicator_e'(DEFAULT);
     endcase
     end
   endfunction
@@ -137,6 +142,7 @@ typedef enum logic [7:0] {
     case(b)
       "Y" : return IPO_SECURITY;
       "N" : return NO_IPO_SECURITY;
+      default : return dir_ipo_flag_e'(DEFAULT);
     endcase
   end
   endfunction
@@ -146,6 +152,7 @@ typedef enum logic [7:0] {
     case(b)
       "1" : return TIER_1;
       "2" : return TIER_2;
+      default : return dir_LULUDReference_Price_Tier_e'(DEFAULT);
     endcase
   end
   endfunction
@@ -155,6 +162,7 @@ typedef enum logic [7:0] {
     case(b)
       "Y" : return INSTRUMENT_ETP;
       "N" : return INSTRUMENT_NOT_ETP;
+      default : return dir_ETP_flag_e'(DEFAULT);
     endcase
   end
   endfunction
@@ -164,6 +172,7 @@ typedef enum logic [7:0] {
     case(b)
       "Y" : return ETP_INVERSE_ETP;
       "N" : return ETP_NOT_INVERSE_ETP;
+      default : return dir_ETP_inverse_indicator_e'(DEFAULT);
     endcase
     end
   endfunction
@@ -171,7 +180,7 @@ typedef enum logic [7:0] {
 //-----------------------------------------------------------------------------------------//
 
 
-   typedef enum logic [3:0] {
+   typedef enum logic [7:0] {
     SYSTEM                = "S",
     STOCK_DIR             = "R",
     ADD_ORDER_NO_MPID     = "A",
@@ -184,7 +193,7 @@ typedef enum logic [7:0] {
   } message_states_e;
 
 
-  typedef enum logic [2:0] {
+  typedef enum logic [4:0] {
     SYSTEM_EVENT_MESSAGE_LENGTH  = 12
 
   } message_lengths;

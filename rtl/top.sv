@@ -39,7 +39,7 @@ module top(
     if(reset) begin
       global_byte_counter <= 0;
       payload_len  <= 0;
-      packet_end   <=  { 31{1'b1} };
+      packet_end   <=  { 32{1'b1} };
       decoding_message <= 0;
       message_ended <= 0;
       internal_byte_counter <= 0;
@@ -47,13 +47,13 @@ module top(
       if(global_byte_counter == packet_end) begin  //Reset byte counter at end of packet
         global_byte_counter <= 0;
         payload_len  <= 0;
-        packet_end   <=  { 31{1'b1} };
+        packet_end   <=  { 32{1'b1} };
       end else begin
         global_byte_counter <= global_byte_counter + 1;
 
         //Generate payload length and packet end
         case (global_byte_counter)
-          42,43: payload_len                          <= {payload_len[7:0], pcap_byte}; //Get length of payload
+          42,43: payload_len[31:16]                          <= {payload_len[7:0], pcap_byte}; //Get length of payload
           44: payload_len[15:8]                       <= payload_len[15:8] - 8; //Since UDP counts part of payload we minus 8
           45: packet_end                              <= global_byte_counter + packet_end;
           46,47,48,49,50,51,52,53,54,55: session      <= {session[71:0], pcap_byte};
@@ -76,6 +76,7 @@ module top(
               ORDER_CANCEL          : message_type <= ORDER_CANCEL;
               ORDER_DELETE          : message_type <= ORDER_DELETE;
               ORDER_REPLACE         : message_type <= ORDER_REPLACE;
+              default : message_type <= 8'hFF;
             endcase
           end
 
@@ -92,7 +93,7 @@ module top(
           end
           else if(message_type == STOCK_DIR && decoding_message) begin
             case(internal_byte_counter)
-              1,2: stock_directory_message.dir_stock_locate                 <= {stock_directory_message.stock_locate[7:0], pcap_byte};
+              1,2: stock_directory_message.stock_locate                 <= {stock_directory_message.stock_locate[7:0], pcap_byte};
               3,4: stock_directory_message.tracking_number                  <= {stock_directory_message.tracking_number[7:0], pcap_byte};
               5,6,7,8,9,10: stock_directory_message.time_stamp              <= {stock_directory_message.time_stamp[39:0], pcap_byte};
               11,12,13,14,15,16,17,18: stock_directory_message.stock_symbol <= {stock_directory_message.stock_symbol[55:0], pcap_byte};
@@ -145,9 +146,9 @@ module top(
               1,2: order_executed_message.stock_locate                         <= {order_executed_message.stock_locate[7:0], pcap_byte};
               3,4: order_executed_message.tracking_number                      <= {order_executed_message.tracking_number[7:0], pcap_byte};
               5,6,7,8,9,10: order_executed_message.time_stamp                  <= {order_executed_message.time_stamp[39:0], pcap_byte};
-              11,12,13,14,15,16,17,18: order_executed_message.reference_number <= {order_executed_message.order_reference_number[55:0], pcap_byte};
+              11,12,13,14,15,16,17,18: order_executed_message.order_reference_number <= {order_executed_message.order_reference_number[55:0], pcap_byte};
               20,21,22,23: order_executed_message.shares                       <= {order_executed_message.shares[23:0], pcap_byte};
-              24,25,26,27,28,29,30,31: order_executed_message.omatch_number    <= {order_executed_message.match_number[55:0], pcap_byte};
+              24,25,26,27,28,29,30,31: order_executed_message.match_number    <= {order_executed_message.match_number[55:0], pcap_byte};
             endcase
             internal_byte_counter <= internal_byte_counter + 1;
             if(internal_byte_counter == 39) decoding_message <= 0;
