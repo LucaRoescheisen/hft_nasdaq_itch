@@ -5,7 +5,17 @@ import message_pckg::*;
 module top(
   input clk,
   input reset,
-  input [7:0] pcap_byte
+  input [7:0] pcap_byte,
+  input logic valid
+  `ifdef DEBUG
+  ,output logic [7:0]  debug_message_type
+  ,output logic [31:0] debug_shares
+  ,output logic [31:0] debug_price
+  ,output logic [63:0] debug_stock
+  ,output logic [7:0] debug_buy_sell
+`endif
+
+
 );
   /*
   NASDAQ ITCH FORMAT
@@ -18,7 +28,7 @@ module top(
   */
   logic [31:0] global_byte_counter;
   logic [31:0] internal_byte_counter;
-  logic [31:0] payload_len;
+  logic [15:0] payload_len;
   logic [31:0] packet_end;
 
 
@@ -26,7 +36,7 @@ module top(
   logic [79:0] session;
   logic [63:0] sequence_number;
   logic [15:0] message_count; //if message_count == 0xFFFF then it is a heartbeat and rest of packet can be ignored
-
+  logic [15:0] message_length;
   logic decoding_message;
   logic message_ended;
   logic [7:0] message_type;
@@ -43,27 +53,33 @@ module top(
       decoding_message <= 0;
       message_ended <= 0;
       internal_byte_counter <= 0;
+      message_length <= 0;
     end else begin
       if(global_byte_counter == packet_end) begin  //Reset byte counter at end of packet
         global_byte_counter <= 0;
         payload_len  <= 0;
+        message_length <= 0;
         packet_end   <=  { 32{1'b1} };
-      end else begin
+      end else if (valid) begin
         global_byte_counter <= global_byte_counter + 1;
 
         //Generate payload length and packet end
         case (global_byte_counter)
-          42,43: payload_len[31:16]                          <= {payload_len[7:0], pcap_byte}; //Get length of payload
-          44: payload_len[15:8]                       <= payload_len[15:8] - 8; //Since UDP counts part of payload we minus 8
-          45: packet_end                              <= global_byte_counter + packet_end;
+          42: payload_len[15:8]  <= pcap_byte;
+          43: payload_len[7:0]   <= pcap_byte;
+          44: payload_len                           <= payload_len - 8; //Since UDP counts part of payload we minus 8
+          45: packet_end            <= global_byte_counter + {16'b0, payload_len};
           46,47,48,49,50,51,52,53,54,55: session      <= {session[71:0], pcap_byte};
-          56,57,58,59,60,61,62,63,64: sequence_number <= {sequence_number[55:0], pcap_byte};
-          65,66: message_count                        <= {message_count[7:0], pcap_byte};
+          56,57,58,59,60,61,62,63: sequence_number    <= {sequence_number[55:0], pcap_byte};
+          64,65: message_count                        <= {message_count[7:0], pcap_byte};
+          66,67: message_length                       <= {message_length[7:0], pcap_byte};
         endcase
 
-        if(message_count != 16'hffff || global_byte_counter > 66) begin //Make sure it is not a heartbeat
+
+        if(message_count != 16'hffff && global_byte_counter > 67) begin //Make sure it is not a heartbeat
           //Event System Message (12 bytes)
           if(!decoding_message) begin
+            $display("MESSAGE TYPE= %h", pcap_byte);
             internal_byte_counter <= 1;
             decoding_message <= 1;
             case(pcap_byte)
@@ -112,7 +128,8 @@ module top(
             internal_byte_counter <= internal_byte_counter + 1;
             if(internal_byte_counter == 33) decoding_message <= 0;
           end
-          else if(message_type == ADD_ORDER_NO_MPID) begin
+          else if(message_type == ADD_ORDER_NO_MPID && decoding_message) begin
+            $display("NO MPID: YES",);
             case(internal_byte_counter)
               1,2: add_order_noMPID_message.stock_locate                               <= {add_order_noMPID_message.stock_locate[7:0], pcap_byte};
               3,4: add_order_noMPID_message.tracking_number                            <= {add_order_noMPID_message.tracking_number[7:0], pcap_byte};
@@ -159,6 +176,15 @@ module top(
       end
     end
   end
+
+
+  `ifdef DEBUG
+  assign debug_message_type  = message_type;
+  assign debug_shares        = add_order_noMPID_message.shares;
+  assign debug_price         = add_order_noMPID_message.price;
+  assign debug_stock         = add_order_noMPID_message.stock;
+  assign debug_buy_sell      = add_order_noMPID_message.buy_sell_indicator;
+`endif
 
 
 
