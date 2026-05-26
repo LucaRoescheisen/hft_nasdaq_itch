@@ -43,8 +43,6 @@ module top(
 
 
 
-
-
   always_ff @(posedge clk) begin
     if(reset) begin
       global_byte_counter <= 0;
@@ -60,15 +58,20 @@ module top(
         payload_len  <= 0;
         message_length <= 0;
         packet_end   <=  { 32{1'b1} };
+        decoding_message <= 0;
+        message_count       <= 0;
       end else if (valid) begin
         global_byte_counter <= global_byte_counter + 1;
+        `ifdef DEBUG
 
+
+        `endif
         //Generate payload length and packet end
         case (global_byte_counter)
           42: payload_len[15:8]  <= pcap_byte;
           43: payload_len[7:0]   <= pcap_byte;
           44: payload_len                           <= payload_len - 8; //Since UDP counts part of payload we minus 8
-          45: packet_end            <= global_byte_counter + {16'b0, payload_len};
+          45: packet_end            <= global_byte_counter + {16'b0, payload_len} + 1;
           46,47,48,49,50,51,52,53,54,55: session      <= {session[71:0], pcap_byte};
           56,57,58,59,60,61,62,63: sequence_number    <= {sequence_number[55:0], pcap_byte};
           64,65: message_count                        <= {message_count[7:0], pcap_byte};
@@ -78,8 +81,8 @@ module top(
 
         if(message_count != 16'hffff && global_byte_counter > 67) begin //Make sure it is not a heartbeat
           //Event System Message (12 bytes)
+
           if(!decoding_message) begin
-            $display("MESSAGE TYPE= %h", pcap_byte);
             internal_byte_counter <= 1;
             decoding_message <= 1;
             case(pcap_byte)
@@ -96,7 +99,7 @@ module top(
             endcase
           end
 
-          if(message_type == SYSTEM && decoding_message) begin
+          else if(message_type == SYSTEM) begin
             internal_byte_counter <= internal_byte_counter + 1;
             case(internal_byte_counter)
               1,2:  system_event_message.sys_stock_locate        <= {system_event_message.sys_stock_locate[7:0], pcap_byte};
@@ -107,15 +110,15 @@ module top(
             endcase
             if(internal_byte_counter == 11) decoding_message <= 0;
           end
-          else if(message_type == STOCK_DIR && decoding_message) begin
+          else if(message_type == STOCK_DIR) begin
             case(internal_byte_counter)
-              1,2: stock_directory_message.stock_locate                 <= {stock_directory_message.stock_locate[7:0], pcap_byte};
+              1,2: stock_directory_message.stock_locate                     <= {stock_directory_message.stock_locate[7:0], pcap_byte};
               3,4: stock_directory_message.tracking_number                  <= {stock_directory_message.tracking_number[7:0], pcap_byte};
               5,6,7,8,9,10: stock_directory_message.time_stamp              <= {stock_directory_message.time_stamp[39:0], pcap_byte};
               11,12,13,14,15,16,17,18: stock_directory_message.stock_symbol <= {stock_directory_message.stock_symbol[55:0], pcap_byte};
               19: stock_directory_message.market_category                   <= pcap_byte;
               20: stock_directory_message.financial_status_indicator        <= parse_financial_status(pcap_byte);
-              21,22,23,24,25,25: stock_directory_message.round_lot_size     <= {stock_directory_message.round_lot_size[23:0], pcap_byte};
+              21,22,23,24,25,25: stock_directory_message.round_lot_size     <= {stock_directory_message.round_lot_size[23:0], pcap_byte}; //BUG
               26: stock_directory_message.issue_classification              <= pcap_byte;
               27: stock_directory_message.authenticity                      <= parse_authenticity(pcap_byte);
               28: stock_directory_message.short_sale_threshold_indicator    <= parse_SST_Indicator(pcap_byte);
@@ -128,8 +131,7 @@ module top(
             internal_byte_counter <= internal_byte_counter + 1;
             if(internal_byte_counter == 33) decoding_message <= 0;
           end
-          else if(message_type == ADD_ORDER_NO_MPID && decoding_message) begin
-            $display("NO MPID: YES",);
+          else if(message_type == ADD_ORDER_NO_MPID) begin
             case(internal_byte_counter)
               1,2: add_order_noMPID_message.stock_locate                               <= {add_order_noMPID_message.stock_locate[7:0], pcap_byte};
               3,4: add_order_noMPID_message.tracking_number                            <= {add_order_noMPID_message.tracking_number[7:0], pcap_byte};
@@ -138,10 +140,13 @@ module top(
               19: add_order_noMPID_message.buy_sell_indicator                          <= pcap_byte;
               20,21,22,23: add_order_noMPID_message.shares                             <= {add_order_noMPID_message.shares[23:0], pcap_byte};
               24,25,26,27,28,29,30,31: add_order_noMPID_message.stock                  <= {add_order_noMPID_message.stock[55:0], pcap_byte};
-              32,33,34,35: add_order_noMPID_message.price                              <= {add_order_noMPID_message.price[23:0], pcap_byte};
+              32,33,34,35: add_order_noMPID_message.price <= {add_order_noMPID_message.price[23:0], pcap_byte};
+
             endcase
-            internal_byte_counter <= internal_byte_counter + 1;
-            if(internal_byte_counter == 35) decoding_message <= 0;
+            if(internal_byte_counter < 35)
+              internal_byte_counter <= internal_byte_counter + 1;
+            else
+              decoding_message <= 0;
           end
           else if(message_type == ADD_ORDER_MPID) begin
             case(internal_byte_counter)
@@ -170,10 +175,15 @@ module top(
             internal_byte_counter <= internal_byte_counter + 1;
             if(internal_byte_counter == 39) decoding_message <= 0;
         end
+        else begin
+          if(internal_byte_counter < {16'b0, message_length} - 1)
+            internal_byte_counter <= internal_byte_counter + 1;
+          else
+            decoding_message <= 0;
+        end
+      end
       end
 
-
-      end
     end
   end
 

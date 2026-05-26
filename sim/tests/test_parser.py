@@ -7,7 +7,7 @@ from scapy.all import PcapReader
 import os
 
 print("LOADED TEST")
-PCAP_FILE = os.path.join(os.path.dirname(__file__), "../pcap/ny4-xnas-tvitch-a-20230822T133000.pcap")
+PCAP_FILE = os.path.join(os.path.dirname(__file__), "../pcap/one.pcap")
 @cocotb.test()
 async def simple_test(dut):
 
@@ -21,15 +21,13 @@ async def simple_test(dut):
 
     with PcapReader(PCAP_FILE) as reader:
         for i, packet in enumerate(reader):
-            if i < 16:
-                continue
-            if i > 16:
+            if i == 50:
                 break
             raw = bytes(packet)
             values = _read_pcap(raw)
             if values is None:
                 continue
-
+            cocotb.log.info(f"[msg={i}] type={values.msg_type} stock={values.stock} price={values.price}")
             packet_length =  len(raw)
             dut.valid.value = 1
             j = 0
@@ -37,14 +35,28 @@ async def simple_test(dut):
                 dut.pcap_byte.value = raw[j]
                 await RisingEdge(dut.clk)
                 j += 1
-            print(f"share {dut.debug_shares.value}")
-            if values.msg_type == 'A':
-                print("CALLED!!!")
 
-                assert int(dut.debug_price.value)  == values.price
-                assert int(dut.debug_buy_sell.value) == values.buy_sell
-
+            dut.pcap_byte.value = 0
             dut.valid.value = 0
+            for _ in range(10):
+                await RisingEdge(dut.clk)
+
+
+            cocotb.log.error(f"valid: {dut.valid.value}")
+            cocotb.log.error(f"[msg={i}] EXPECTED={values.price} GOT={int(dut.debug_price.value)}")
+            cocotb.log.error(f"[msg={i}] EXPECTED={values.shares} GOT={int(dut.debug_shares.value)}")
+            if values.msg_type == 'A':
+                print("NoMPID")
+                print(int(dut.debug_price.value))
+                print(int(values.price))
+                assert int(dut.debug_price.value)  == values.price
+                assert int(dut.debug_shares.value)  == values.shares
+                assert int(dut.debug_stock.value)  == values.stock
+                assert int(dut.debug_buy_sell.value)  == values.buy_sell
+
+               # assert int(dut.debug_buy_sell.value) == values.buy_sell
+
+
 
     dut.pcap_byte.value = 0xFF
     await RisingEdge(dut.clk)

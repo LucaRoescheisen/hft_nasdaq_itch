@@ -16,17 +16,17 @@ def _read_pcap(raw):
   print(f"  Message type: {msg_type}")
   offset = 20
   for _ in range(msg_count):
-    msg_len = struct.unpack(">H", payload[offset: offset + 2])[0]
-    msg_body = payload[offset+2:offset+2+msg_len]
+    msg_len = struct.unpack(">H", payload[offset:offset + 2])[0]
+    msg_body = payload[offset + 2:offset + 2 + msg_len]
+    offset += 2 + msg_len  # ← you're also missing this
     msg_type = chr(msg_body[0])
-    if msg_type == "A": #No MPID
-      stock = msg_body[24:32].decode('ascii').strip()
-      shares = struct.unpack('>I', msg_body[20:24])[0]
-      price    = struct.unpack('>I', msg_body[32:36])[0] / 10000.0
-      buy_sell = chr(msg_body[19])
-      print(f"  Add Order No MPID: {stock} {buy_sell} {shares} @${price}")
-      return ITCHMessage(msg_type,
-                         msg_body[24:32],
-                         shares,
-                         struct.unpack('>I', msg_body[32:36])[0] ,
-                         msg_body[19])
+
+    if msg_type == "A":
+        stock_bytes = msg_body[24:32]
+        stock_int   = int.from_bytes(stock_bytes, 'big')
+        shares      = struct.unpack('>I', msg_body[20:24])[0]
+        price       = struct.unpack('>I', msg_body[32:36])[0]
+        buy_sell    = msg_body[19]  # raw int, matches dut signal comparison
+        print(f"  Add Order No MPID: {stock_bytes.decode('ascii').strip()} "
+              f"{'B' if buy_sell == ord('B') else 'S'} {shares} @${price / 10000:.4f}")
+        return ITCHMessage(msg_type, stock_int, shares, price, buy_sell)

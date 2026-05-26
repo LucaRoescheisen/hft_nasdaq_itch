@@ -1,0 +1,3 @@
+-v /home/supal/hft_nasdaq_itch/rtl/message_pckg.sv
++incdir+/home/supal/hft_nasdaq_itch/rtl
++incdir+/home/supal/hft_nasdaq_itch/rtl
