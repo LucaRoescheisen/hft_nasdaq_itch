@@ -4,11 +4,10 @@ dfx_runtime.txt
 logs/
 rtl/top_test.v
 sim/obj_dir
-.venv/
 obj_dir/
 sim/sim_build
 sim/tests/__pycache__
 sim/results.xml
-sim/Makefile
 sim/pcap
 sim/dump.vcd
+.venv/

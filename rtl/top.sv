@@ -1,8 +1,8 @@
 //NOTE ON CURRENT DESIGN : ASSUMPTION  CLK SPEED == INCOMING BYTE SEEED (will update later for more realistic results/methodologies)
 //Syntax note: variables ending with _e are enums
 
-import message_pckg::*;
-module top(
+
+module top import message_pckg::*;(
   input clk,
   input reset,
   input [7:0] pcap_byte,
@@ -80,7 +80,7 @@ module top(
 
 
         if(message_count != 16'hffff && global_byte_counter > 67) begin //Make sure it is not a heartbeat
-          //Event System Message (12 bytes)
+           //Event System Message (12 bytes)
 
           if(!decoding_message) begin
             internal_byte_counter <= 1;
@@ -97,7 +97,7 @@ module top(
               ORDER_REPLACE         : message_type <= ORDER_REPLACE;
               default : message_type <= 8'hFF;
             endcase
-          end
+         end
 
           else if(message_type == SYSTEM) begin
             internal_byte_counter <= internal_byte_counter + 1;
