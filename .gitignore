@@ -11,3 +11,4 @@ sim/results.xml
 sim/pcap
 sim/dump.vcd
 .venv/
+sim/dump.gtkw

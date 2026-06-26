@@ -2,8 +2,15 @@ from scapy.all import PcapReader
 from collections import namedtuple
 import struct
 
-ITCHMessage = namedtuple(
-    "ITCH_MESSAGE", ["msg_type", "stock", "shares", "price", "buy_sell"]
+NOMPID_MESSAGE = namedtuple(
+    "NOMPID_MESSAGE", ["msg_type", "stock", "shares", "price", "buy_sell"]
+)
+REPLACE_MESSAGE = namedtuple(
+    "REPLACE_MESSAGE",
+    ["msg_type", "shares", "price", "original_ref", "new_ref"],
+)
+MPID_MESSAGE = namedtuple(
+    "MPID_MESSAGE", ["msg_type", "stock", "shares", "price", "buy_sell"]
 )
 
 
@@ -15,16 +22,17 @@ def _read_pcap(raw):
     # print(f"Session: {session}, Sequence Number: {seq_num}, Message Count: {msg_count}")
     if msg_count == 0xFFFF:
         return
-    msg_type = chr(payload[22])
-    print(f"  Message type: {msg_type}")
+
     offset = 20
-    for _ in range(msg_count):
+    results = []
+    for k in range(msg_count):
         msg_len = struct.unpack(">H", payload[offset : offset + 2])[0]
         msg_body = payload[offset + 2 : offset + 2 + msg_len]
         offset += 2 + msg_len
         msg_type = chr(msg_body[0])
-
+        print(f"Message type: {msg_type}")
         if msg_type == "A":
+            print(f"Found NoMPID at message {k + 1} of {msg_count}")
             stock_bytes = msg_body[24:32]
             stock_int = int.from_bytes(stock_bytes, "big")
             shares = struct.unpack(">I", msg_body[20:24])[0]
@@ -34,5 +42,30 @@ def _read_pcap(raw):
                 f"  Add Order No MPID: {stock_bytes.decode('ascii').strip()} "
                 f"{'B' if buy_sell == ord('B') else 'S'} {shares} @${price / 10000:.4f}"
             )
-            return ITCHMessage(msg_type, stock_int, shares, price, buy_sell)
+            results.append(NOMPID_MESSAGE(msg_type, stock_int, shares, price, buy_sell))
+        elif msg_type == "U":
+            print(f"Found replace at message {k + 1} of {msg_count}")
+            shares = struct.unpack(">I", msg_body[27:31])[0]
+            price = struct.unpack(">I", msg_body[31:35])[0]
+            original_ref = struct.unpack(">Q", msg_body[11:19])[0]
+            new_ref = struct.unpack(">Q", msg_body[19:27])[0]
+            print(f" Replace Order: {shares} @${price / 10000:.4f}")
+            results.append(
+                REPLACE_MESSAGE(msg_type, shares, price, original_ref, new_ref)
+            )
+        elif msg_type == "F":
+            print(f"Found MPID at message {k + 1} of {msg_count}")
+            stock_bytes = msg_body[24:32]
+            stock_int = int.from_bytes(stock_bytes, "big")
+            shares = struct.unpack(">I", msg_body[20:24])[0]
+            price = struct.unpack(">I", msg_body[32:36])[0]
+            buy_sell = msg_body[19]  # raw int, matches dut signal comparison
+            print(
+                f"  Add Order MPID: {stock_bytes.decode('ascii').strip()} "
+                f"{'B' if buy_sell == ord('B') else 'S'} {shares} @${price / 10000:.4f}"
+            )
+            results.append(MPID_MESSAGE(msg_type, stock_int, shares, price, buy_sell))
 
+        else:
+            results.append(None)
+    return results

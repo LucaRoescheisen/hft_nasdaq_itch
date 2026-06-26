@@ -1,0 +1,2 @@
+-line-length
+-no-trailing-spaces
