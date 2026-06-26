@@ -219,10 +219,20 @@ module top import message_pckg::*;(
                     31,32,33:  order_replace_message.price <= {order_replace_message.price[23:0], pcap_byte};
                     34: begin
                       order_replace_message.price <= {order_replace_message.price[23:0], pcap_byte};
-                      msg_done <= 1;
                     end
                   endcase
                 end
+                else if (message_type == ORDER_EXEC) begin
+                  case(internal_byte_counter)
+                    1,2: order_executed_message.stock_locate                         <= {order_executed_message.stock_locate[7:0], pcap_byte};
+                    3,4: order_executed_message.tracking_number                      <= {order_executed_message.tracking_number[7:0], pcap_byte};
+                    5,6,7,8,9,10: order_executed_message.time_stamp                  <= {order_executed_message.time_stamp[39:0], pcap_byte};
+                    11,12,13,14,15,16,17,18: order_executed_message.order_reference_number <= {order_executed_message.order_reference_number[55:0], pcap_byte};
+                    20,21,22,23: order_executed_message.shares                       <= {order_executed_message.shares[23:0], pcap_byte};
+                    24,25,26,27,28,29,30,31: order_executed_message.match_number    <= {order_executed_message.match_number[55:0], pcap_byte};
+                  endcase
+                end
+
               end
               if(internal_byte_counter == {16'd0, current_message_length} - 32'd1) begin
                 msg_state <= MSG_LEN_HI;
@@ -234,96 +244,6 @@ module top import message_pckg::*;(
             end
           default: msg_state <= MSG_IDLE;
           endcase
-            /*
-          else if(message_type == SYSTEM) begin
-            internal_byte_counter <= internal_byte_counter + 1;
-            case(internal_byte_counter)
-              1,2:  system_event_message.sys_stock_locate
-                <= {system_event_message.sys_stock_locate[7:0], pcap_byte};
-
-              3,4:  system_event_message.sys_tracking_number
-                <= {system_event_message.sys_tracking_number[7:0], pcap_byte};
-
-              5,6,7,8,9:   system_event_message.sys_time_stamp
-                      <= {system_event_message.sys_time_stamp[39:0], pcap_byte};
-
-              10: system_event_message.sys_time_stamp[7:0] <= pcap_byte;
-              11: system_event_message.sys_event_code[7:0] <= pcap_byte;
-            endcase
-
-            if(internal_byte_counter == 11) decoding_message <= 0;
-          end
-          else if(message_type == STOCK_DIR) begin
-            case(internal_byte_counter)
-              1,2: stock_directory_message.stock_locate                     <= {stock_directory_message.stock_locate[7:0], pcap_byte};
-              3,4: stock_directory_message.tracking_number                  <= {stock_directory_message.tracking_number[7:0], pcap_byte};
-              5,6,7,8,9,10: stock_directory_message.time_stamp              <= {stock_directory_message.time_stamp[39:0], pcap_byte};
-              11,12,13,14,15,16,17,18: stock_directory_message.stock_symbol <= {stock_directory_message.stock_symbol[55:0], pcap_byte};
-              19: stock_directory_message.market_category                   <= pcap_byte;
-              20: stock_directory_message.financial_status_indicator        <= parse_financial_status(pcap_byte);
-              21,22,23,24,25,25: stock_directory_message.round_lot_size     <= {stock_directory_message.round_lot_size[23:0], pcap_byte}; //BUG
-              26: stock_directory_message.issue_classification              <= pcap_byte;
-              27: stock_directory_message.authenticity                      <= parse_authenticity(pcap_byte);
-              28: stock_directory_message.short_sale_threshold_indicator    <= parse_SST_Indicator(pcap_byte);
-              29: stock_directory_message.ipo_flag                          <= parse_IPO_Flag(pcap_byte);
-              30: stock_directory_message.LULUDReference_Price_Tier         <= parse_Price_Tier(pcap_byte);
-              31: stock_directory_message.ETP_flag                          <= parse_ETP_Flag(pcap_byte);
-              32: stock_directory_message.ETP_leverage_factor               <= pcap_byte;
-              33: stock_directory_message.ETP_inverse_indicator             <= parse_ETP_inverse_indicator(pcap_byte);
-            endcase
-            internal_byte_counter <= internal_byte_counter + 1;
-            if(internal_byte_counter == 33) decoding_message <= 0;
-          end
-          else if(message_type == ADD_ORDER_NO_MPID) begin
-            case(internal_byte_counter)
-              1,2: add_order_noMPID_message.stock_locate                               <= {add_order_noMPID_message.stock_locate[7:0], pcap_byte};
-              3,4: add_order_noMPID_message.tracking_number                            <= {add_order_noMPID_message.tracking_number[7:0], pcap_byte};
-              5,6,7,8,9,10: add_order_noMPID_message.time_stamp                        <= {add_order_noMPID_message.time_stamp[39:0], pcap_byte};
-              11,12,13,14,15,16,17,18: add_order_noMPID_message.order_reference_number <= {add_order_noMPID_message.order_reference_number[55:0], pcap_byte};
-              19: add_order_noMPID_message.buy_sell_indicator                          <= pcap_byte;
-              20,21,22,23: add_order_noMPID_message.shares                             <= {add_order_noMPID_message.shares[23:0], pcap_byte};
-              24,25,26,27,28,29,30,31: add_order_noMPID_message.stock                  <= {add_order_noMPID_message.stock[55:0], pcap_byte};
-              32,33,34,35: add_order_noMPID_message.price <= {add_order_noMPID_message.price[23:0], pcap_byte};
-
-            endcase
-            if(internal_byte_counter < 35)
-              internal_byte_counter <= internal_byte_counter + 1;
-            else
-              decoding_message <= 0;
-          end
-          else if(message_type == ADD_ORDER_MPID) begin
-            case(internal_byte_counter)
-              1,2: add_order_MPID_message.stock_locate                               <= {add_order_MPID_message.stock_locate[7:0], pcap_byte};
-              3,4: add_order_MPID_message.tracking_number                            <= {add_order_MPID_message.tracking_number[7:0], pcap_byte};
-              5,6,7,8,9,10: add_order_MPID_message.time_stamp                        <= {add_order_MPID_message.time_stamp[39:0], pcap_byte};
-              11,12,13,14,15,16,17,18: add_order_MPID_message.order_reference_number <= {add_order_MPID_message.order_reference_number[55:0], pcap_byte};
-              19: add_order_MPID_message.buy_sell_indicator                          <= pcap_byte;
-              20,21,22,23: add_order_MPID_message.shares                             <= {add_order_MPID_message.shares[23:0], pcap_byte};
-              24,25,26,27,28,29,30,31: add_order_MPID_message.stock                  <= {add_order_MPID_message.stock[55:0], pcap_byte};
-              32,33,34,35: add_order_MPID_message.price                              <= {add_order_MPID_message.price[23:0], pcap_byte};
-              36,37,38,39: add_order_MPID_message.attribution                          <= {add_order_MPID_message.attribution[23:0], pcap_byte};
-            endcase
-            internal_byte_counter <= internal_byte_counter + 1;
-            if(internal_byte_counter == 39) decoding_message <= 0;
-          end
-          else if (message_type == ORDER_EXEC) begin
-            case(internal_byte_counter)
-              1,2: order_executed_message.stock_locate                         <= {order_executed_message.stock_locate[7:0], pcap_byte};
-              3,4: order_executed_message.tracking_number                      <= {order_executed_message.tracking_number[7:0], pcap_byte};
-              5,6,7,8,9,10: order_executed_message.time_stamp                  <= {order_executed_message.time_stamp[39:0], pcap_byte};
-              11,12,13,14,15,16,17,18: order_executed_message.order_reference_number <= {order_executed_message.order_reference_number[55:0], pcap_byte};
-              20,21,22,23: order_executed_message.shares                       <= {order_executed_message.shares[23:0], pcap_byte};
-              24,25,26,27,28,29,30,31: order_executed_message.match_number    <= {order_executed_message.match_number[55:0], pcap_byte};
-            endcase
-            internal_byte_counter <= internal_byte_counter + 1;
-            if(internal_byte_counter == 31) decoding_message <= 0;
-        end
-        else begin
-          if(internal_byte_counter < {16'b0, message_length} - 1)
-            internal_byte_counter <= internal_byte_counter + 1;
-          else
-            decoding_message <= 0;
-        end*/
       end
       end
 

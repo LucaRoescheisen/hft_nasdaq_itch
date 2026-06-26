@@ -69,7 +69,7 @@ async def main(dut):
     all_packets = []
     with PcapReader(PCAP_FILE) as reader:
         for i, packet in enumerate(reader):
-            if i == 100:
+            if i == 1000:
                 break
             raw = bytes(packet)
             result = _read_pcap(raw)
