@@ -204,7 +204,6 @@ package message_pckg;
     logic [47:0] sys_time_stamp;
     logic [7:0]  sys_event_code;
   } System_Event_Message;
-  System_Event_Message system_event_message;
 
   typedef enum logic [7:0] {
     EVENT_START_MESSAGES = "O",
@@ -241,7 +240,6 @@ package message_pckg;
     logic [7:0]  ETP_leverage_factor;
     logic [7:0]  ETP_inverse_indicator;
   } Stock_Directory_Message;
-  Stock_Directory_Message stock_directory_message;
 
   //ADD-ORDER NO MPID
   typedef struct packed {
@@ -255,7 +253,6 @@ package message_pckg;
     logic [63:0] stock;
     logic [31:0] price;
   } Add_Order_NoMPID_Message;
-  Add_Order_NoMPID_Message add_order_noMPID_message;
 
   //ADD-ORDER MPID
   typedef struct packed {
@@ -270,7 +267,6 @@ package message_pckg;
     logic [31:0] price;
     logic [31:0] attribution;
   } Add_Order_MPID_Message;
-  Add_Order_MPID_Message add_order_MPID_message;
 
   //ORDER EXECUTED
   typedef struct packed {
@@ -283,7 +279,6 @@ package message_pckg;
     logic [63:0] match_number;
 
   } Order_Executed_Message;
-  Order_Executed_Message order_executed_message;
 
   //ORDER EXECUTED WITH PRICE
   typedef struct packed {
@@ -297,7 +292,6 @@ package message_pckg;
     logic [7:0] printable;
     logic [31:0] price;  //4dec
   } Order_Executed_With_Price_Message;
-  Order_Executed_With_Price_Message order_executed_with_price_message;
 
   //ORDER CANCEL MESSAGE
   typedef struct packed {
@@ -308,7 +302,6 @@ package message_pckg;
     logic [63:0] order_reference_number;
     logic [31:0] shares;
   } Order_Cancel_Message;
-  Order_Cancel_Message order_cancel_message;
 
   //ORDER DELETE MESSAGE
   typedef struct packed {
@@ -318,7 +311,6 @@ package message_pckg;
     logic [47:0] time_stamp;
     logic [63:0] order_reference_number;
   } Order_Delete_Message;
-  Order_Delete_Message order_delete_message;
 
   //ORDER REPLACE MESSAGE
   typedef struct packed {
@@ -331,7 +323,6 @@ package message_pckg;
     logic [31:0] shares;
     logic [31:0] price;  //4dec
   } Order_Replace_Message;
-  Order_Replace_Message order_replace_message;
 
 
 
