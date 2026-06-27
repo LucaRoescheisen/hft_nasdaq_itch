@@ -1,4 +1,3 @@
-from scapy.all import PcapReader
 from collections import namedtuple
 import struct
 
@@ -12,6 +11,23 @@ REPLACE_MESSAGE = namedtuple(
 MPID_MESSAGE = namedtuple(
     "MPID_MESSAGE", ["msg_type", "stock", "shares", "price", "buy_sell"]
 )
+ORDER_EXECUTE_MESSAGE = namedtuple(
+    "ORDER_EXECUTE_MESSAGE",
+    ["msg_type", "shares", "order_reference_number", "match_number"]
+)
+ORDER_EXECUTE_WITH_PRICE_MESSAGE = namedtuple(
+    "ORDER_EXECUTE_WITH_PRICE_MESSAGE",
+    ["msg_type", "shares", "order_reference_number", "match_number", "price"]
+)
+CANCEL_MESSAGE = namedtuple(
+    "CANCEL_MESSAGE", ["msg_type", "shares", "order_reference_number"]
+)
+DELETE_MESSAGE = namedtuple(
+    "DELETE_MESSAGE", ["msg_type", "order_reference_number"]
+)
+
+
+
 
 
 def _read_pcap(raw):
@@ -38,10 +54,8 @@ def _read_pcap(raw):
             shares = struct.unpack(">I", msg_body[20:24])[0]
             price = struct.unpack(">I", msg_body[32:36])[0]
             buy_sell = msg_body[19]  # raw int, matches dut signal comparison
-            print(
-                f"  Add Order No MPID: {stock_bytes.decode('ascii').strip()} "
-                f"{'B' if buy_sell == ord('B') else 'S'} {shares} @${price / 10000:.4f}"
-            )
+            print(f"  Add Order No MPID: {stock_bytes.decode('ascii').strip()} "
+                f"{'B' if buy_sell == ord('B') else 'S'} {shares} @${price / 10000:.4f}")
             results.append(NOMPID_MESSAGE(msg_type, stock_int, shares, price, buy_sell))
         elif msg_type == "U":
             print(f"Found replace at message {k + 1} of {msg_count}")
@@ -50,9 +64,7 @@ def _read_pcap(raw):
             original_ref = struct.unpack(">Q", msg_body[11:19])[0]
             new_ref = struct.unpack(">Q", msg_body[19:27])[0]
             print(f" Replace Order: {shares} @${price / 10000:.4f}")
-            results.append(
-                REPLACE_MESSAGE(msg_type, shares, price, original_ref, new_ref)
-            )
+            results.append(REPLACE_MESSAGE(msg_type, shares, price, original_ref, new_ref))
         elif msg_type == "F":
             print(f"Found MPID at message {k + 1} of {msg_count}")
             stock_bytes = msg_body[24:32]
@@ -60,12 +72,31 @@ def _read_pcap(raw):
             shares = struct.unpack(">I", msg_body[20:24])[0]
             price = struct.unpack(">I", msg_body[32:36])[0]
             buy_sell = msg_body[19]  # raw int, matches dut signal comparison
-            print(
-                f"  Add Order MPID: {stock_bytes.decode('ascii').strip()} "
-                f"{'B' if buy_sell == ord('B') else 'S'} {shares} @${price / 10000:.4f}"
-            )
+            print(f"  Add Order MPID: {stock_bytes.decode('ascii').strip()} "
+                f"{'B' if buy_sell == ord('B') else 'S'} {shares} @${price / 10000:.4f}")
             results.append(MPID_MESSAGE(msg_type, stock_int, shares, price, buy_sell))
-
+        elif msg_type == "E":
+            print(f"Found order executed at message {k + 1} of {msg_count}")
+            order_reference_number = struct.unpack(">Q", msg_body[11:19])[0]
+            shares = struct.unpack(">I", msg_body[19:23])[0]
+            match_number = struct.unpack(">Q", msg_body[23:31])[0]
+            results.append(ORDER_EXECUTE_MESSAGE(msg_type, shares, order_reference_number, match_number))
+        elif msg_type == "C":
+            print(f"Found order executed with price at message {k + 1} of {msg_count}")
+            order_reference_number = struct.unpack(">Q", msg_body[11:19])[0]
+            shares = struct.unpack(">I", msg_body[19:23])[0]
+            match_number = struct.unpack(">Q", msg_body[23:31])[0]
+            price = struct.unpack(">I", msg_body[32:36])[0]
+            results.append(ORDER_EXECUTE_WITH_PRICE_MESSAGE(msg_type, shares, order_reference_number, match_number, price))
+        elif msg_type == "X":
+            print(f"Found cancel at message {k + 1} of {msg_count}")
+            order_reference_number = struct.unpack(">Q", msg_body[11:19])[0]
+            shares = struct.unpack(">I", msg_body[19:23])[0]
+            results.append(CANCEL_MESSAGE(msg_type, shares, order_reference_number))
+        elif msg_type == "D":
+            print(f"Found delete at message {k + 1} of {msg_count}")
+            order_reference_number = struct.unpack(">Q", msg_body[11:19])[0]
+            results.append(DELETE_MESSAGE(msg_type, order_reference_number))
         else:
             results.append(None)
     return results

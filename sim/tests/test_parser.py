@@ -2,7 +2,7 @@ import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, Timer
 from scapy.all import rdpcap
-from pcap_itch_decoder import MPID_MESSAGE, NOMPID_MESSAGE, REPLACE_MESSAGE, _read_pcap
+from pcap_itch_decoder import MPID_MESSAGE, NOMPID_MESSAGE, ORDER_EXECUTE_MESSAGE, REPLACE_MESSAGE, ORDER_EXECUTE_WITH_PRICE_MESSAGE, CANCEL_MESSAGE, DELETE_MESSAGE, _read_pcap
 from scapy.all import PcapReader
 import os
 from collections import deque
@@ -30,36 +30,65 @@ async def monitor(dut, expected_queue):
             if expected is not None:
                 if expected.msg_type == "A" and isinstance(expected, NOMPID_MESSAGE):
                     print("NoMPID")
-                    assert int(dut.debug_noMPID_price.value) == expected.price, (
-                        f"[msg EXPECTED={expected.price} GOT={int(dut.debug_noMPID_price.value)}"
-                    )
-                    assert int(dut.debug_noMPID_shares.value) == expected.shares, (
-                        f"[msg EXPECTED={expected.shares} GOT={int(dut.debug_noMPID_price.value)}"
-                    )
-                    assert int(dut.debug_noMPID_stock.value) == expected.stock, (
-                        f"[msg EXPECTED={expected.stock} GOT={int(dut.debug_noMPID_stock.value)}"
-                    )
-
-                    assert int(dut.debug_noMPID_buy_sell.value) == expected.buy_sell, (
-                        f"[msg EXPECTED={expected.buy_sell} GOT={int(dut.debug_noMPID_buy_sell.value)}"
-                    )
+                    assert int(dut.debug_noMPID_price.value) == expected.price, \
+                    (f"[  EXPECTED={expected.price} GOT={int(dut.debug_noMPID_price.value)}")
+                    assert int(dut.debug_noMPID_shares.value) == expected.shares, \
+                    (f"[  EXPECTED={expected.shares} GOT={int(dut.debug_noMPID_price.value)}")
+                    assert int(dut.debug_noMPID_stock.value) == expected.stock, \
+                    (f"[  EXPECTED={expected.stock} GOT={int(dut.debug_noMPID_stock.value)}")
+                    assert int(dut.debug_noMPID_buy_sell.value) == expected.buy_sell, \
+                    (f"[  EXPECTED={expected.buy_sell} GOT={int(dut.debug_noMPID_buy_sell.value)}")
 
                 elif expected.msg_type == "U" and isinstance(expected, REPLACE_MESSAGE):
                     print("Order replace")
-                    print(
-                        f"[msg EXPECTED={expected.price} GOT={int(dut.debug_replace_price.value)}]"
-                    )
-                    assert int(dut.debug_replace_price.value) == expected.price, (
-                        f"[msg EXPECTED={expected.price} GOT={int(dut.debug_replace_price.value)}"
-                    )
-                    assert int(dut.debug_replace_shares.value) == expected.shares, (
-                        f"[msg EXPECTED={expected.shares} GOT={int(dut.debug_replace_shares.value)}"
-                    )
+                    assert int(dut.debug_replace_price.value) == expected.price, \
+                    (f"[  EXPECTED={expected.price} GOT={int(dut.debug_replace_price.value)}")
+                    assert int(dut.debug_replace_shares.value) == expected.shares, \
+                    (f"[  EXPECTED={expected.shares} GOT={int(dut.debug_replace_shares.value)}")
+
                 elif expected.msg_type == "F" and isinstance(expected, MPID_MESSAGE):
-                    assert int(dut.debug_MPID_price.value) == expected.price
-                    assert int(dut.debug_MPID_shares.value) == expected.shares
-                    assert int(dut.debug_MPID_stock.value) == expected.stock
-                    assert int(dut.debug_MPID_buy_sell.value) == expected.buy_sell
+                    print("MPID")
+                    assert int(dut.debug_MPID_price.value) == expected.price, \
+                    (f"[  EXPECTED={expected.price} GOT={int(dut.debug_MPID_price.value)}]")
+                    assert int(dut.debug_MPID_shares.value) == expected.shares, \
+                    (f"[  EXPECTED={expected.price} GOT={int(dut.debug_MPID_shares.value)}]")
+                    assert int(dut.debug_MPID_stock.value) == expected.stock, \
+                    (f"[  EXPECTED={expected.price} GOT={int(dut.debug_MPID_stock.value)}]")
+                    assert int(dut.debug_MPID_buy_sell.value) == expected.buy_sell, \
+                    (f"[  EXPECTED={expected.price} GOT={int(dut.debug_MPID_buy_sell.value)}]")
+
+                elif expected.msg_type == "E" and isinstance(expected, ORDER_EXECUTE_MESSAGE):
+                    print("Order Executed")
+                    assert int(dut.debug_executed_order_ref_num) == expected.order_reference_number, \
+                    (f"[EXPECTED={expected.order_reference_number} GOT={int(dut.debug_executed_order_ref_num)}")
+                    assert int(dut.debug_executed_shares) == expected.shares, \
+                    (f"[EXPECTED={expected.shares} GOT={int(dut.debug_executed_shares)}")
+                    assert int(dut.debug_executed_match_num) == expected.match_number, \
+                    (f"[EXPECTED={expected.match_number} GOT={int(dut.debug_executed_match_num)}")
+
+                elif expected.msg_type == "C" and isinstance(expected, ORDER_EXECUTE_WITH_PRICE_MESSAGE):
+                    print("Order Executed with price")
+                    assert int(dut.debug_executed_with_price_order_ref_num) == expected.order_reference_number, \
+                    (f"[EXPECTED={expected.order_reference_number} GOT={int(dut.debug_executed_with_price_order_ref_num)}")
+                    assert int(dut.debug_executed_with_price_shares) == expected.shares, \
+                    (f"[EXPECTED={expected.shares} GOT={int(dut.debug_executed_with_price_shares)}")
+                    assert int(dut.debug_executed_with_price_match_num) == expected.match_number, \
+                    (f"[EXPECTED={expected.match_number} GOT={int(dut.debug_executed_with_pricematch_num)}")
+                    assert int(dut.debug_executed_with_price_price) == expected.price, \
+                    (f"[EXPECTED={expected.price} GOT={int(dut.debug_executed_with_price_price)}")
+
+                elif expected.msg_type == "X" and isinstance(expected, CANCEL_MESSAGE):
+                    print("Order cancel")
+                    assert int(dut.debug_cancel_order_ref_num) == expected.order_reference_number, \
+                    (f"[EXPECTED={expected.order_reference_number} GOT={int(dut.debug_cancel_order_ref_num)}")
+                    assert int(dut.debug_cancel_shares) == expected.shares, \
+                    (f"[EXPECTED={expected.shares} GOT={int(dut.debug_cancel_shares)}")
+
+                elif expected.msg_type == "D" and isinstance(expected, DELETE_MESSAGE):
+                    print("Order delete")
+                    assert int(dut.debug_delete_order_ref_num) == expected.order_reference_number, \
+                    (f"[EXPECTED={expected.order_reference_number} GOT={int(dut.debug_delete_order_ref_num)}")
+
             else:
                 print("Message currently not supported")
 

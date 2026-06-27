@@ -10,12 +10,13 @@ module top import message_pckg::*;(
   output logic msg_done, 
   output logic [15:0] current_msg_num
   `ifdef DEBUG
-    //NOMPID
+  //NOMPID
   ,output logic [7:0]  debug_noMPID_message_type
   ,output logic [31:0] debug_noMPID_shares
   ,output logic [31:0] debug_noMPID_price
   ,output logic [63:0] debug_noMPID_stock
   ,output logic [7:0] debug_noMPID_buy_sell
+
   //MPID
   ,output logic [7:0]  debug_MPID_message_type
   ,output logic [31:0] debug_MPID_shares
@@ -23,13 +24,29 @@ module top import message_pckg::*;(
   ,output logic [63:0] debug_MPID_stock
   ,output logic [7:0] debug_MPID_buy_sell
 
-
-  //Replace 
+  //Replace
   ,output logic [63:0] debug_original_reference_number
   ,output logic [63:0] debug_new_order_reference_number
   ,output logic [31:0] debug_replace_shares
   ,output logic [31:0] debug_replace_price
 
+  //Order executed
+  ,output logic [63:0] debug_executed_order_ref_num
+  ,output logic [31:0] debug_executed_shares
+  ,output logic [63:0] debug_executed_match_num
+
+  //Order executed with price
+  ,output logic [63:0] debug_executed_with_price_order_ref_num
+  ,output logic [31:0] debug_executed_with_price_shares
+  ,output logic [31:0] debug_executed_with_price_price
+  ,output logic [63:0] debug_executed_with_price_match_num
+
+  //Order cancel
+  ,output logic [63:0] debug_cancel_order_ref_num
+  ,output logic [31:0] debug_cancel_shares
+
+  //Order delete
+  ,output logic [63:0] debug_delete_order_ref_num
 
 `endif
 
@@ -228,11 +245,39 @@ module top import message_pckg::*;(
                     3,4: order_executed_message.tracking_number                      <= {order_executed_message.tracking_number[7:0], pcap_byte};
                     5,6,7,8,9,10: order_executed_message.time_stamp                  <= {order_executed_message.time_stamp[39:0], pcap_byte};
                     11,12,13,14,15,16,17,18: order_executed_message.order_reference_number <= {order_executed_message.order_reference_number[55:0], pcap_byte};
-                    20,21,22,23: order_executed_message.shares                       <= {order_executed_message.shares[23:0], pcap_byte};
-                    24,25,26,27,28,29,30,31: order_executed_message.match_number    <= {order_executed_message.match_number[55:0], pcap_byte};
+                    19,20,21,22: order_executed_message.shares                       <= {order_executed_message.shares[23:0], pcap_byte};
+                    23,24,25,26,27,28,29,30: order_executed_message.match_number    <= {order_executed_message.match_number[55:0], pcap_byte};
                   endcase
                 end
-
+                else if (message_type == ORDER_EXEC_WITH_PRICE) begin
+                  case(internal_byte_counter)
+                    1,2: order_executed_with_price_message.stock_locate                         <= {order_executed_with_price_message.stock_locate[7:0], pcap_byte};
+                    3,4: order_executed_with_price_message.tracking_number                      <= {order_executed_with_price_message.tracking_number[7:0], pcap_byte};
+                    5,6,7,8,9,10: order_executed_with_price_message.time_stamp                  <= {order_executed_with_price_message.time_stamp[39:0], pcap_byte};
+                    11,12,13,14,15,16,17,18: order_executed_with_price_message.order_reference_number <= {order_executed_with_price_message.order_reference_number[55:0], pcap_byte};
+                    19,20,21,22: order_executed_with_price_message.shares                       <= {order_executed_with_price_message.shares[23:0], pcap_byte};
+                    23,24,25,26,27,28,29,30: order_executed_with_price_message.match_number    <= {order_executed_with_price_message.match_number[55:0], pcap_byte};
+                    31: order_executed_with_price_message.printable <= pcap_byte;
+                    32,33,34,35: order_executed_with_price_message.price <= {order_executed_with_price_message.price[23:0], pcap_byte};
+                  endcase
+                end
+                else if (message_type == ORDER_CANCEL) begin
+                  case(internal_byte_counter)
+                    1,2: order_cancel_message.stock_locate                         <= {order_cancel_message.stock_locate[7:0], pcap_byte};
+                    3,4: order_cancel_message.tracking_number                      <= {order_cancel_message.tracking_number[7:0], pcap_byte};
+                    5,6,7,8,9,10: order_cancel_message.time_stamp                  <= {order_cancel_message.time_stamp[39:0], pcap_byte};
+                    11,12,13,14,15,16,17,18: order_cancel_message.order_reference_number <= {order_cancel_message.order_reference_number[55:0], pcap_byte};
+                    19,20,21,22: order_cancel_message.shares              <= {order_cancel_message.shares[23:0], pcap_byte};
+                  endcase
+                end
+                else if (message_type == ORDER_DELETE) begin
+                  case(internal_byte_counter)
+                    1,2: order_delete_message.stock_locate                         <= {order_delete_message.stock_locate[7:0], pcap_byte};
+                    3,4: order_delete_message.tracking_number                      <= {order_delete_message.tracking_number[7:0], pcap_byte};
+                    5,6,7,8,9,10: order_delete_message.time_stamp                  <= {order_delete_message.time_stamp[39:0], pcap_byte};
+                    11,12,13,14,15,16,17,18: order_delete_message.order_reference_number <= {order_delete_message.order_reference_number[55:0], pcap_byte};
+                  endcase
+                end
               end
               if(internal_byte_counter == {16'd0, current_message_length} - 32'd1) begin
                 msg_state <= MSG_LEN_HI;
@@ -271,7 +316,23 @@ module top import message_pckg::*;(
   assign debug_replace_shares = order_replace_message.shares;
   assign debug_replace_price = order_replace_message.price;
 
+  //Order executed
+  assign debug_executed_order_ref_num = order_executed_message.order_reference_number;
+  assign debug_executed_shares = order_executed_message.shares;
+  assign debug_executed_match_num = order_executed_message.match_number;
 
+  //Order executed with price
+  assign debug_executed_with_price_order_ref_num = order_executed_with_price_message.order_reference_number;
+  assign debug_executed_with_price_shares = order_executed_with_price_message.shares;
+  assign debug_executed_with_price_price = order_executed_with_price_message.price;
+  assign debug_executed_with_price_match_num = order_executed_with_price_message.match_number;
+
+  //Order cancel
+  assign debug_cancel_order_ref_num = order_cancel_message.order_reference_number;
+  assign debug_cancel_shares = order_cancel_message.shares;
+
+  //Order delete
+  assign debug_delete_order_ref_num = order_delete_message.order_reference_number;
 `endif
 
 
