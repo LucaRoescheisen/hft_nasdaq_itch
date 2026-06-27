@@ -3,6 +3,7 @@ TOPLEVEL_LANG = verilog
 
 VERILOG_SOURCES = \
     $(PWD)/../rtl/message_pckg.sv \
+		$(PWD)/../rtl/parser.sv \
     $(PWD)/../rtl/top.sv
 
 TOPLEVEL = top
