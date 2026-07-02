@@ -327,7 +327,15 @@ package message_pckg;
 
 
 
+ typedef struct packed {
+   //logic orm_ready; As there is already begin_processing variable
+    logic new_orm_ready;
+    logic buy_sell_ready;
+    logic shares_ready;
+    logic price_ready;
+    logic match_number_ready;
 
+   } Message_Content_Ready;
 
 
 endpackage
