@@ -3,7 +3,7 @@
 
 ## Features
 
-✔ Ethernet/IPv4/UDP packet processing (or state assumptions)
+✔ Ethernet/IPv4/UDP packet processing
 
 ✔ MoldUDP64 parsing
 
