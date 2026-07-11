@@ -32,7 +32,6 @@ module top import message_pckg::*; (
     ,output logic [63:0] debug_delete_order_ref_num
     `endif
 );
-
     // struct instances owned by top
     Add_Order_NoMPID_Message         add_order_noMPID_message;
     Add_Order_MPID_Message           add_order_MPID_message;
@@ -95,7 +94,7 @@ module top import message_pckg::*; (
         `endif
     );
 
-    order_book u_order_book(
+    order_book u_reference_book(
       .clk(clk),
       .reset(reset),
       .message_type(message_type),
