@@ -12,3 +12,10 @@ sim/pcap
 sim/dump.vcd
 .venv/
 sim/dump.gtkw
+.nvim/
+.vscode/
+pyrightconfig.json
+.rules.verible_lint.txt
+sim/Makefile
+sim/dump.gtkw
+commands.txt

@@ -1,8 +1,0 @@
-
-
- //WSL
-verilator -Wall -Wno-fatal --cc rtl/*.v --exe ../tb.cpp --trace -top-module top_verilator --Mdir ./sim/obj_dir
-make -C sim/obj_dir -j -f Vtop_verilator.mk Vtop_verilator
-./sim/obj_dir/Vtop_verilator
-
-
