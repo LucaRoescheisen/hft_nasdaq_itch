@@ -1,26 +1,17 @@
 ![Status: WIP](https://img.shields.io/badge/status-WIP-yellow)
 
 
-## Features
+# NASDAQ ITCH Hardware Parser & Trading Pipeline
 
-✔ Ethernet/IPv4/UDP packet processing
+A SystemVerilog implementation of a NASDAQ ITCH 5.0 feed handler, built and verified
+against real market data captures. Long-term goal: parser → order book → matching
+engine, cross-checked against Python and C++ reference models.
 
-✔ MoldUDP64 parsing
+## Status
 
-✔ NASDAQ ITCH message decoding
-
-✔ Cocotb verification
-
-✔ Historical PCAP replay (verified with 100,000 pcap messages)
-
-## In Progress
-
-- Multi-stock order book
-  
-- Trading strategy
-
-- Performance evaluation
-
-- Risk Engine
-
+| Component        | Status | Notes  |
+|------------------|--------|--------|
+| ITCH Parser      | ✅ Done | Verified against 100k+ real pcap captures |
+| Order Book       | 🚧 In progress | Architecture design underway |
+| Matching Engine  | ⏳ Planned |   |
 
