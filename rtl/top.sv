@@ -46,7 +46,7 @@ module top import message_pckg::*; (
     Message_Content_Ready message_content_ready;
 
     logic [7:0] message_type;
-    logic begin_processing;
+    logic ref_num_finished;
     parser u_parser (
         .clk                              (clk),
         .reset                            (reset),
@@ -55,7 +55,7 @@ module top import message_pckg::*; (
         .msg_done                         (msg_done),
         .current_msg_num                  (current_msg_num),
         .message_type                     (message_type),
-        .begin_processing                 (begin_processing),
+        .ref_num_finished                 (ref_num_finished),
         .add_order_noMPID_message         (add_order_noMPID_message),
         .add_order_MPID_message           (add_order_MPID_message),
         .order_executed_message           (order_executed_message),
@@ -94,11 +94,11 @@ module top import message_pckg::*; (
         `endif
     );
 
-    order_book u_reference_book(
+    order_book u_order_book(
       .clk(clk),
       .reset(reset),
       .message_type(message_type),
-      .begin_processing(begin_processing),
+      .ref_num_finished(ref_num_finished),
       .add_order_noMPID_message         (add_order_noMPID_message),
       .add_order_MPID_message           (add_order_MPID_message),
       .order_executed_message           (order_executed_message),

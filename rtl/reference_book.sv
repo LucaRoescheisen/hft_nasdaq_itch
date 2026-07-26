@@ -34,8 +34,8 @@ module reference_book import message_pckg::*; import toeplitz_hash::*; (
 
 
 
-parameter ORDER_BOOK_ENTIRES = 65536;
-parameter ORDER_BOOK_ENTRY_DEPTH = 192;
+parameter ORDER_BOOK_ENTIRES = 1024;
+parameter ORDER_BOOK_ENTRY_DEPTH = 12;
 logic ref_order_book_1 [ORDER_BOOK_ENTIRES - 1: 0][ORDER_BOOK_ENTRY_DEPTH - 1 : 0];
 logic ref_order_book_2  [ORDER_BOOK_ENTIRES - 1: 0][ORDER_BOOK_ENTRY_DEPTH - 1 : 0];
 /*

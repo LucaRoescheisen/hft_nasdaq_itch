@@ -27,13 +27,17 @@ module order_book import message_pckg::*; (
 */
 
 
+logic [2047:0] freelist [11:0];
+initial begin
+  $readmemh("python_scripts/generate_2047.mem", freelist);
+end
 
 
+logic [2047:0] static_items [87:0];
 
 
-
-parameter ORDER_BOOK_ENTIRES = 65536;
-parameter ORDER_BOOK_ENTRY_DEPTH = 192;
+parameter ORDER_BOOK_ENTIRES = 1024;
+parameter ORDER_BOOK_ENTRY_DEPTH = 11;
 logic ref_order_book [ORDER_BOOK_ENTIRES - 1: 0][ORDER_BOOK_ENTRY_DEPTH - 1 : 0];
 logic [15:0] ref_index;
 always_ff @(posedge clk) begin

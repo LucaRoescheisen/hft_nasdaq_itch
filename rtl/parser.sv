@@ -7,7 +7,7 @@ module parser import message_pckg::*;(
   output logic msg_done, 
   output logic [15:0] current_msg_num,
   output logic [7:0] message_type,
-  output logic begin_processing,
+  output logic ref_num_finished,
   output Message_Content_Ready message_content_ready,
   output Add_Order_NoMPID_Message add_order_noMPID_message,
   output Add_Order_MPID_Message add_order_MPID_message,
@@ -309,8 +309,8 @@ module parser import message_pckg::*;(
                 end
               end
 
-              if( internal_byte_counter >= 18) begin_processing <= 1;
-              else begin_processing <= 0;
+              if( internal_byte_counter >= 18) ref_num_finished <= 1;
+              else ref_num_finished <= 0;
 
               if(internal_byte_counter == {16'd0, current_message_length} - 32'd1) begin
                 msg_state <= MSG_LEN_HI;
