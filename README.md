@@ -53,6 +53,8 @@ waveform inspection:
    confidence at production-relevant scale rather than a handful of hand-crafted
    test vectors.
 
+## Order Book (in progress)
+
 Designing a limit order book that consumes the parser's decoded message stream,
 built around three core structures: a stable array for order storage, a cuckoo
 hash table for O(1) order lookup, and per-side price-level arrays for FIFO
