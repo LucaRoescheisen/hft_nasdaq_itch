@@ -49,7 +49,7 @@ waveform inspection:
 3. A monitor coroutine watches for the `msg_done` strobe and asserts every decoded
    field (price, shares, order reference number, match number, stock symbol,
    buy/sell side, etc.) against the Python reference model for each message type.
-4. Run across **100,000+ real ITCH pcap captures**, giving field-level correctness
+4. Run across **100,000+ ITCH pcap captures**, giving field-level correctness
    confidence at production-relevant scale rather than a handful of hand-crafted
    test vectors.
 
