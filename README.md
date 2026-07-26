@@ -11,7 +11,7 @@ engine, cross-checked against Python and C++ reference models.
 
 | Component        | Status | Notes  |
 |------------------|--------|--------|
-| ITCH Parser      | ✅ Done | Verified against 100k+ real pcap captures |
+| ITCH Parser      | ✅ Done | Verified against 100k+ pcap captures |
 | Order Book       | 🚧 In progress | Architecture design underway |
 | Matching Engine  | ⏳ Planned |   |
 
