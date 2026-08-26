@@ -1,0 +1,14 @@
+SIM = verilator
+TOPLEVEL_LANG = verilog
+
+VERILOG_SOURCES = \
+    $(PWD)/../rtl/message_pckg.sv \
+		$(PWD)/../rtl/toeplitz_hash.sv \
+		$(PWD)/../rtl/cuckoo_table.sv
+
+TOPLEVEL = cuckoo_table
+MODULE = tests.test_cuckoo
+COMPILE_ARGS = +define+DEBUG
+EXTRA_ARGS += --sv --trace
+WAVES = 1
+include $(shell cocotb-config --makefiles)/Makefile.sim
