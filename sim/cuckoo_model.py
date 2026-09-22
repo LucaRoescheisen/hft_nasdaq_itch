@@ -89,7 +89,20 @@ class Cuckoo:
             live = (self.stats["inserts_1"] + self.stats["inserts_2"] - self.stats["deletions_1"] - self.stats["deletions_2"])
             self.stats["peak_live"] = max(self.stats.get("peak_live", 0), live)
             return msg.order_ref_number, msg.msg_type
-       
+        elif msg.msg_type == "D" and msg.stock_locate == b'%%':
+            self.remove(msg.order_ref_number)
+            self.shares.pop(msg.order_ref_number, None)   
+        elif msg.msg_type == "U" and msg.stock_locate == b'%%':
+            self.replace(msg.original_ref, msg.new_ref)
+            return None, None
+        elif msg.msg_type in ("E", "C", "X") and msg.stock_locate == b'%%':
+            if self.contains(msg.order_ref_number):
+                self.stats["exec_cancel_hits"] += 1
+                if msg.order_ref_number in self.shares:
+                    self.shares[msg.order_ref_number] -= msg.shares
+                    if self.shares[msg.order_ref_number] <= 0:
+                        del self.shares[msg.order_ref_number]
+                        self.remove(msg.order_ref_number)
         return None, None
 def packets(path, limit=100000):
     with RawPcapReader(path) as r:
