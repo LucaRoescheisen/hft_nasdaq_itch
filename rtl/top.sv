@@ -55,7 +55,7 @@ module top import message_pckg::*; (
         .msg_done                         (msg_done),
         .current_msg_num                  (current_msg_num),
         .message_type                     (message_type),
-        .ref_num_finished                 (ref_num_finished),
+        //.ref_num_finished                 (ref_num_finished),
         .add_order_noMPID_message         (add_order_noMPID_message),
         .add_order_MPID_message           (add_order_MPID_message),
         .order_executed_message           (order_executed_message),
@@ -64,8 +64,8 @@ module top import message_pckg::*; (
         .order_delete_message             (order_delete_message),
         .order_replace_message            (order_replace_message),
         .stock_directory_message          (stock_directory_message),
-        .system_event_message             (system_event_message),
-        .message_content_ready            (message_content_ready)
+        .system_event_message             (system_event_message)
+        //.message_content_ready            (message_content_ready)
         `ifdef DEBUG
         ,.debug_noMPID_message_type                (debug_noMPID_message_type)
         ,.debug_noMPID_shares                      (debug_noMPID_shares)
@@ -93,7 +93,7 @@ module top import message_pckg::*; (
         ,.debug_delete_order_ref_num               (debug_delete_order_ref_num)
         `endif
     );
-
+/*
     order_book u_order_book(
       .clk(clk),
       .reset(reset),
@@ -106,6 +106,6 @@ module top import message_pckg::*; (
       .order_cancel_message             (order_cancel_message),
       .order_delete_message             (order_delete_message),
       .order_replace_message            (order_replace_message)
-      );
+      );*/
 
 endmodule

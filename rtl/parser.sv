@@ -7,8 +7,6 @@ module parser import message_pckg::*;(
   output logic msg_done, 
   output logic [15:0] current_msg_num,
   output logic [7:0] message_type,
-  output logic ref_num_finished,
-  output Message_Content_Ready message_content_ready,
   output Add_Order_NoMPID_Message add_order_noMPID_message,
   output Add_Order_MPID_Message add_order_MPID_message,
   output Order_Executed_Message order_executed_message,
@@ -18,7 +16,6 @@ module parser import message_pckg::*;(
   output Order_Replace_Message order_replace_message,
   output Stock_Directory_Message stock_directory_message,
   output System_Event_Message system_event_message
-
   `ifdef DEBUG
   //NOMPID
   ,output logic [7:0]  debug_noMPID_message_type
@@ -187,23 +184,10 @@ module parser import message_pckg::*;(
                     3,4: add_order_noMPID_message.tracking_number                            <= {add_order_noMPID_message.tracking_number[7:0], pcap_byte};
                     5,6,7,8,9,10: add_order_noMPID_message.time_stamp                        <= {add_order_noMPID_message.time_stamp[39:0], pcap_byte};
                     11,12,13,14,15,16,17,18: add_order_noMPID_message.order_reference_number <= {add_order_noMPID_message.order_reference_number[55:0], pcap_byte};
-                    19: begin
-                      message_content_ready.buy_sell_ready <= 1;
-                      add_order_noMPID_message.buy_sell_indicator <= pcap_byte;
-                    end
-                    20,21,22: add_order_noMPID_message.shares <= {add_order_noMPID_message.shares[23:0], pcap_byte};
-                    23: begin
-                      add_order_noMPID_message.shares <= {add_order_noMPID_message.shares[23:0], pcap_byte};
-                      message_content_ready.shares_ready <= 1;
-                    end
-
-                    24,25,26,27,28,29,30: add_order_noMPID_message.stock <= {add_order_noMPID_message.stock[55:0], pcap_byte};
-                    32,33,34: add_order_noMPID_message.price <= {add_order_noMPID_message.price[23:0], pcap_byte};
-                    35: begin
-                      message_content_ready.price <= 1;
-                      add_order_noMPID_message.price <= {add_order_noMPID_message.price[23:0], pcap_byte};
-                    end
-
+                    19: add_order_noMPID_message.buy_sell_indicator                          <= pcap_byte;
+                    20,21,22,23: add_order_noMPID_message.shares                             <= {add_order_noMPID_message.shares[23:0], pcap_byte};
+                    24,25,26,27,28,29,30,31: add_order_noMPID_message.stock                  <= {add_order_noMPID_message.stock[55:0], pcap_byte};
+                    32,33,34,35: add_order_noMPID_message.price <= {add_order_noMPID_message.price[23:0], pcap_byte};
                   endcase
                 end
                 else if(message_type == ADD_ORDER_MPID) begin
@@ -212,21 +196,10 @@ module parser import message_pckg::*;(
                     3,4: add_order_MPID_message.tracking_number                            <= {add_order_MPID_message.tracking_number[7:0], pcap_byte};
                     5,6,7,8,9,10: add_order_MPID_message.time_stamp                        <= {add_order_MPID_message.time_stamp[39:0], pcap_byte};
                     11,12,13,14,15,16,17,18: add_order_MPID_message.order_reference_number <= {add_order_MPID_message.order_reference_number[55:0], pcap_byte};
-                    19: begin
-                      message_content_ready.buy_sell_ready <= 1;
-                      add_order_MPID_message.buy_sell_indicator <= pcap_byte;
-                    end
-                    20,21,22,23: add_order_MPID_message.shares <= {add_order_MPID_message.shares[23:0], pcap_byte};
-                    23: begin
-                      add_order_MPID_message.shares <= {add_order_MPID_message.shares[23:0], pcap_byte};
-                      message_content_ready.shares_ready <= 1;
-                    end
-                    24,25,26,27,28,29,30,31: add_order_MPID_message.stock  <= {add_order_MPID_message.stock[55:0], pcap_byte};
-                    32,33,34: add_order_MPID_message.price <= {add_order_MPID_message.price[23:0], pcap_byte};
-                    35: begin
-                      message_content_ready.price <= 1;
-                      add_order_MPID_message.price <= {add_order_MPID_message.price[23:0], pcap_byte};
-                    end
+                    19: add_order_MPID_message.buy_sell_indicator                          <= pcap_byte;
+                    20,21,22,23: add_order_MPID_message.shares                             <= {add_order_MPID_message.shares[23:0], pcap_byte};
+                    24,25,26,27,28,29,30,31: add_order_MPID_message.stock                  <= {add_order_MPID_message.stock[55:0], pcap_byte};
+                    32,33,34,35: add_order_MPID_message.price <= {add_order_MPID_message.price[23:0], pcap_byte};
                     36,37,38,39: add_order_MPID_message.attribution <= {add_order_MPID_message.attribution[23:0], pcap_byte};
                   endcase
                 end
@@ -292,11 +265,7 @@ module parser import message_pckg::*;(
                     3,4: order_cancel_message.tracking_number                      <= {order_cancel_message.tracking_number[7:0], pcap_byte};
                     5,6,7,8,9,10: order_cancel_message.time_stamp                  <= {order_cancel_message.time_stamp[39:0], pcap_byte};
                     11,12,13,14,15,16,17,18: order_cancel_message.order_reference_number <= {order_cancel_message.order_reference_number[55:0], pcap_byte};
-                    19,20,21: order_cancel_message.shares              <= {order_cancel_message.shares[23:0], pcap_byte};
-                    22: begin
-                      order_cancel_message.shares              <= {order_cancel_message.shares[23:0], pcap_byte};
-                      message_content_ready.shares<= 1;
-                    end
+                    19,20,21,22: order_cancel_message.shares              <= {order_cancel_message.shares[23:0], pcap_byte};
                   endcase
                 end
                 else if (message_type == ORDER_DELETE) begin
@@ -308,10 +277,6 @@ module parser import message_pckg::*;(
                   endcase
                 end
               end
-
-              if( internal_byte_counter >= 18) ref_num_finished <= 1;
-              else ref_num_finished <= 0;
-
               if(internal_byte_counter == {16'd0, current_message_length} - 32'd1) begin
                 msg_state <= MSG_LEN_HI;
                 msg_done <= 1;

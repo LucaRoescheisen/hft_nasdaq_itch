@@ -16,6 +16,6 @@ sim/dump.gtkw
 .vscode/
 pyrightconfig.json
 .rules.verible_lint.txt
-sim/Makefile
 sim/dump.gtkw
 commands.txt
+sim/__pycache__

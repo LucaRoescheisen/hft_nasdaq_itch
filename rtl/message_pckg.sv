@@ -236,7 +236,7 @@ package message_pckg;
     logic [7:0]  short_sale_threshold_indicator;
     logic [7:0]  ipo_flag;
     logic [7:0]  LULUDReference_Price_Tier;
-    logic [7:0]  ETP_flag;
+   logic [7:0]  ETP_flag;
     logic [7:0]  ETP_leverage_factor;
     logic [7:0]  ETP_inverse_indicator;
   } Stock_Directory_Message;
