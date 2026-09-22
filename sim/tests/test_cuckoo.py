@@ -16,7 +16,7 @@ PCAP_FILE = os.path.join(os.path.dirname(__file__), "../pcap/one.pcap")
 
 
 
-async def drive_message(dut, ref_num, msg_type):
+async def drive_message(dut, ref_num, ref_num_new, msg_type):
     await RisingEdge(dut.clk);
     if msg_type == "A":
         dut.msg_type.value = ' '.join(f"{ord(char):08b}" for char in msg_type)
@@ -25,65 +25,27 @@ async def drive_message(dut, ref_num, msg_type):
     elif msg_type == "F":
         dut.msg_type.value = ' '.join(f"{ord(char):08b}" for char in msg_type)
         dut.we.value = 1
-        dut.add_order_MPID_message.value = ref_num << 200
+        dut.add_order_MPID_message.value = ref_num << 168
+    elif msg_type == "D":
+        dut.msg_type.value = ' '.join(f"{ord(char):08b}" for char in msg_type)
+        dut.we.value = 1
+        dut.order_delete_message.value = ref_num << 0;
+    elif msg_type == "U":
+        dut.msg_type.value = ' '.join(f"{ord(char):08b}" for char in msg_type)
+        dut.we.value = 1
+        dut.order_replace_message.value = (ref_num << 128) | (ref_num_new << 64)
     else:
         return
     await RisingEdge(dut.clk);
     dut.we.value = 0
 
 
-async def monitor(dut, expected_queue, cuckoo_hmap, stats):
-    counter = 0;
-    while True:
-        await RisingEdge(dut.clk)
-        if len(expected_queue) == 0:
-            continue
-        expected = expected_queue.popleft()
-        print(expected)
-        if expected is not None:
-            if expected.msg_type == "A" and isinstance(expected, NOMPID_MESSAGE):
-                hash1 = toeplitz_hash1(expected.order_ref_number)
-                hash2 = toeplitz_hash2(expected.order_ref_number)
-                insert(hash1, hash2, cuckoo_hmap, stats)
-                print("NoMPID")
-                
-
-            elif expected.msg_type == "U" and isinstance(expected, REPLACE_MESSAGE):
-                print("Order replace")
-                
-
-            elif expected.msg_type == "F" and isinstance(expected, MPID_MESSAGE):
-                print("MPID")
-                hash1 = toeplitz_hash1(expected.order_ref_number)
-                hash2 = toeplitz_hash2(expected.order_ref_number)
-                insert(hash1, hash2, cuckoo_hmap, stats)
-
-            elif expected.msg_type == "E" and isinstance(expected, ORDER_EXECUTE_MESSAGE):
-                print("Order Executed")
-                
-
-            elif expected.msg_type == "C" and isinstance(expected, ORDER_EXECUTE_WITH_PRICE_MESSAGE):
-                print("Order Executed with price")
-                
-
-            elif expected.msg_type == "X" and isinstance(expected, CANCEL_MESSAGE):
-                print("Order cancel")
-                
-
-            elif expected.msg_type == "D" and isinstance(expected, DELETE_MESSAGE):
-                print("Order delete")
-                
-
-            else:
-                print("Message currently not supported")
-
-
+  
 @cocotb.test()
 async def main(dut):
     all_packets = []
-    cuckoo_hmap = {}
     m = Cuckoo()
-    stats = {"collisions": 0}
+    hdl_stats = {"inserts_1": 0, "inserts_2": 0, "collisions": 0, "deletions_1": 0, "deletions_2":0, "peak_live":0, "exec_cancel_hits":0}
     #original_print = builtins.print
     #builtins.print = lambda *args, **kwargs: None
     
@@ -96,16 +58,20 @@ async def main(dut):
     for _, msgs in packets("pcap/one.pcap"):
         for msg in msgs:
             await RisingEdge(dut.clk);
-            ref_num, msg_type = m.process(msg)
+            ref_num, ref_num_new, msg_type = m.process(msg)
             if ref_num is None or msg_type is None:
                 continue
-            await drive_message(dut, ref_num, msg_type)
-
+            await drive_message(dut, ref_num, ref_num_new, msg_type)
             await RisingEdge(dut.clk);
-           
-    print(f"Collisions: {int(dut.collisions.value)}")
-    print(f"Inserts 1: {int(dut.inserts_1.value)}")
-    print(f"Inserts 2: {int(dut.inserts_2.value)}")
+            #assert int(dut.h1_debug.value) == m.h1, f"{counter}"
+            #assert int(dut.ref_num_r.value) == ref_num, f"{counter}, {msg_type}, {ref_num}"
+            #assert int(dut.msg_type_debug.value) == ord(msg_type), f"{counter}"
+    hdl_stats["inserts_1"] = int(dut.inserts_1.value)
+    hdl_stats["inserts_2"] = int(dut.inserts_2.value)
+    hdl_stats["collisions"] = int(dut.collisions.value)
+    hdl_stats["deletions_1"] = int(dut.deletions_1.value)
+    hdl_stats["deletions_2"] = int(dut.deletions_2.value)
+    print(hdl_stats)
     print(m.stats)
     #builtins.print = original_print
     expected_queue = deque()
