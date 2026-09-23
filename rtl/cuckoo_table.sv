@@ -66,6 +66,9 @@ module cuckoo_table import message_pckg::*; import toeplitz_hash::*; #(
   logic[BUCKET_WIDTH:0] bucket_1;
   logic[BUCKET_WIDTH:0] bucket_2;
   
+  logic[BUCKET_WIDTH:0] bucket_1_remove;
+  logic[BUCKET_WIDTH:0] bucket_2_remove;
+
   logic [63:0] ref_num;
   logic [63:0] ref_num_r;
   logic [63:0] ref_num_new;
@@ -139,7 +142,9 @@ module cuckoo_table import message_pckg::*; import toeplitz_hash::*; #(
     end
     else begin
       bucket_1 <= tb_1[h1];
+      bucket_1_remove <= tb_1[h1_new];
       bucket_2 <= tb_2[h2];
+      bucket_2_remove <= tb_2[h2_new];
       ref_num_r <= ref_num;
       we_r <= we;
       msg_type_r <= msg_type;
@@ -156,11 +161,11 @@ logic [63:0] insert_ref;
 
 
 
-logic [3:0] b1_slots, b2_slots;
+logic [3:0] b1_slots, b2_slots, b1_slots_rem, b2_slots_rem;
 logic [2:0] b1_first_free_slot, b2_first_free_slot;
 logic [2:0] b1_size, b2_size;
 
-
+logic [9:0] h1_insert, h2_insert;
 
 assign h1_debug = h1_r;
 assign h2_debug = h2_r;
@@ -171,17 +176,25 @@ assign msg_type_debug = msg_type_r;
 
 always_comb begin
 
+  h1_insert = msg_type_r == "U" ? h1_new_r : h1_r;
+  h2_insert = msg_type_r == "U" ? h2_new_r : h2_r;
+
+
   insert_ref = msg_type_r == "U" ? ref_num_new_r : ref_num_r;
+  
+  //Always point to the h1 and h2 version as remove requires this
+  b1_slots_rem = bucket_1[3:0];
+  b2_slots_rem = bucket_2[3:0];
 
-  b1_slots = bucket_1[3:0];
-  b2_slots = bucket_2[3:0];
+  b1_slots = msg_type_r == "U" ? bucket_1_remove[3:0] : bucket_1[3:0];
+  b2_slots = msg_type_r == "U" ? bucket_2_remove[3:0] : bucket_2[3:0];
 
-  b1_first_free_slot = (b1_slots[0] == 0) ?  1 :
+  b1_first_free_slot =  (b1_slots[0] == 0) ?  1 :
                         (b1_slots[1] == 0) ? 2 :
                         (b1_slots[2] == 0) ? 3 :
                         (b1_slots[3] == 0) ? 4 : 0;
 
-  b2_first_free_slot = (b2_slots[0] == 0) ?  1 :
+  b2_first_free_slot =  (b2_slots[0] == 0) ?  1 :
                         (b2_slots[1] == 0) ? 2 :
                         (b2_slots[2] == 0) ? 3 :
                         (b2_slots[3] == 0) ? 4 : 0;
@@ -207,20 +220,20 @@ end
           if((b1_size <= b2_size)) begin //Bucket 1 smaller
             case(b1_first_free_slot)
               3'b001 : begin 
-                tb_1[h1_r][BUCKET_SIZE_SEG +: OFFSET] <= insert_ref;
-                tb_1[h1_r][0 +: BUCKET_SIZE_SEG] <= b1_slots | 4'b0001;
+                tb_1[h1_insert][BUCKET_SIZE_SEG +: OFFSET] <= insert_ref;
+                tb_1[h1_insert][0 +: BUCKET_SIZE_SEG] <= b1_slots | 4'b0001;
               end
               3'b010 : begin 
-                tb_1[h1_r][BUCKET_SIZE_SEG+OFFSET +: OFFSET] <= insert_ref;
-                tb_1[h1_r][0 +: BUCKET_SIZE_SEG] <= b1_slots | 4'b0010;
+                tb_1[h1_insert][BUCKET_SIZE_SEG+OFFSET +: OFFSET] <= insert_ref;
+                tb_1[h1_insert][0 +: BUCKET_SIZE_SEG] <= b1_slots | 4'b0010;
               end
               3'b011 : begin 
-                tb_1[h1_r][BUCKET_SIZE_SEG+OFFSET*2 +: OFFSET] <= insert_ref;
-                tb_1[h1_r][0 +: BUCKET_SIZE_SEG] <= b1_slots | 4'b0100;
+                tb_1[h1_insert][BUCKET_SIZE_SEG+OFFSET*2 +: OFFSET] <= insert_ref;
+                tb_1[h1_insert][0 +: BUCKET_SIZE_SEG] <= b1_slots | 4'b0100;
               end
               3'b100 : begin
-                tb_1[h1_r][BUCKET_SIZE_SEG+OFFSET*3 +: OFFSET] <= insert_ref;
-                tb_1[h1_r][0 +: BUCKET_SIZE_SEG] <= b1_slots | 4'b1000;
+                tb_1[h1_insert][BUCKET_SIZE_SEG+OFFSET*3 +: OFFSET] <= insert_ref;
+                tb_1[h1_insert][0 +: BUCKET_SIZE_SEG] <= b1_slots | 4'b1000;
               end
               endcase
               inserts_1 = inserts_1 + 1;
@@ -228,20 +241,20 @@ end
           else if((b1_size > b2_size)) begin //Bucket 2 smaller
             case(b2_first_free_slot)
               3'b001 : begin 
-                tb_2[h2_r][BUCKET_SIZE_SEG +: OFFSET] <= insert_ref;
-                tb_2[h2_r][0 +: BUCKET_SIZE_SEG] <= b2_slots | 4'b0001;
+                tb_2[h2_insert][BUCKET_SIZE_SEG +: OFFSET] <= insert_ref;
+                tb_2[h2_insert][0 +: BUCKET_SIZE_SEG] <= b2_slots | 4'b0001;
               end
               3'b010 :  begin 
-                tb_2[h2_r][BUCKET_SIZE_SEG+OFFSET +: OFFSET] <= insert_ref;
-                tb_2[h2_r][0 +: BUCKET_SIZE_SEG] <= b2_slots | 4'b0010;
+                tb_2[h2_insert][BUCKET_SIZE_SEG+OFFSET +: OFFSET] <= insert_ref;
+                tb_2[h2_insert][0 +: BUCKET_SIZE_SEG] <= b2_slots | 4'b0010;
               end
               3'b011 : begin 
-                tb_2[h2_r][BUCKET_SIZE_SEG+OFFSET*2 +: OFFSET] <= insert_ref;
-                tb_2[h2_r][0 +: BUCKET_SIZE_SEG] <= b2_slots | 4'b0100;
+                tb_2[h2_insert][BUCKET_SIZE_SEG+OFFSET*2 +: OFFSET] <= insert_ref;
+                tb_2[h2_insert][0 +: BUCKET_SIZE_SEG] <= b2_slots | 4'b0100;
               end
               3'b100 : begin
-                tb_2[h2_r][BUCKET_SIZE_SEG+OFFSET*3 +: OFFSET] <= insert_ref;
-                tb_2[h2_r][0 +: BUCKET_SIZE_SEG] <= b2_slots | 4'b1000;
+                tb_2[h2_insert][BUCKET_SIZE_SEG+OFFSET*3 +: OFFSET] <= insert_ref;
+                tb_2[h2_insert][0 +: BUCKET_SIZE_SEG] <= b2_slots | 4'b1000;
               end
               endcase
               inserts_2 <= inserts_2 + 1;
@@ -263,19 +276,15 @@ end
   logic [2:0] pos_1;
   logic [2:0] pos_2;
 
-  logic [63:0] remove_ref;
-
  always_comb begin
-
-  remove_ref = msg_type_r == "D" ? ref_num_r : ref_num_new_r;
-  pos_1 = (b1_slots[0] && bucket_1[INITIAL_OFFSET +: OFFSET] == remove_ref) ? 1 :
-          (b1_slots[1] && bucket_1[INITIAL_OFFSET+OFFSET +: OFFSET] == remove_ref) ? 2 :
-          (b1_slots[2] && bucket_1[INITIAL_OFFSET+OFFSET*2 +: OFFSET] == remove_ref) ? 3 :
-          (b1_slots[3] && bucket_1[INITIAL_OFFSET+OFFSET*3 +: OFFSET] == remove_ref) ? 4 : 0;
-  pos_2 = (b2_slots[0] && bucket_2[INITIAL_OFFSET +: OFFSET] == remove_ref) ? 1 :
-          (b2_slots[1] && bucket_2[INITIAL_OFFSET+OFFSET +: OFFSET] == remove_ref) ? 2 :
-          (b2_slots[2] && bucket_2[INITIAL_OFFSET+OFFSET*2 +: OFFSET] == remove_ref) ? 3 :
-          (b2_slots[3] && bucket_2[INITIAL_OFFSET+OFFSET*3 +: OFFSET] == remove_ref) ? 4 : 0;
+  pos_1 = (b1_slots_rem[0] && bucket_1[INITIAL_OFFSET +: OFFSET] == ref_num_r) ? 1 :
+          (b1_slots_rem[1] && bucket_1[INITIAL_OFFSET+OFFSET +: OFFSET] == ref_num_r) ? 2 :
+          (b1_slots_rem[2] && bucket_1[INITIAL_OFFSET+OFFSET*2 +: OFFSET] == ref_num_r) ? 3 :
+          (b1_slots_rem[3] && bucket_1[INITIAL_OFFSET+OFFSET*3 +: OFFSET] == ref_num_r) ? 4 : 0;
+  pos_2 = (b2_slots_rem[0] && bucket_2[INITIAL_OFFSET +: OFFSET] == ref_num_r) ? 1 :
+          (b2_slots_rem[1] && bucket_2[INITIAL_OFFSET+OFFSET +: OFFSET] == ref_num_r) ? 2 :
+          (b2_slots_rem[2] && bucket_2[INITIAL_OFFSET+OFFSET*2 +: OFFSET] == ref_num_r) ? 3 :
+          (b2_slots_rem[3] && bucket_2[INITIAL_OFFSET+OFFSET*3 +: OFFSET] == ref_num_r) ? 4 : 0;
 
  end
 
@@ -287,11 +296,11 @@ end
     else begin
       if(msg_type_r == "D" || msg_type_r == "U") begin
         if((pos_1 > 0) && we_r) begin
-          tb_1[h1_r][0 +: BUCKET_SIZE_SEG] <= b1_slots & ~(1 << (pos_1-1));
+          tb_1[h1_r][0 +: BUCKET_SIZE_SEG] <= b1_slots_rem & ~(1 << (pos_1-1));
           deletions_1 <= deletions_1 + 1;
         end
         else if((pos_2 > 0) && we_r) begin
-          tb_2[h2_r][0 +: BUCKET_SIZE_SEG] <= b2_slots & ~(1 << (pos_2-1));
+          tb_2[h2_r][0 +: BUCKET_SIZE_SEG] <= b2_slots_rem & ~(1 << (pos_2-1));
           deletions_2 <= deletions_2 + 1;
         end
       end
