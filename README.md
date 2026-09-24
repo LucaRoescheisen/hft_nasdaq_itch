@@ -113,12 +113,7 @@ tracking every possible price. As the best bid/ask moves, the window slides up
 or down, evicting the level(s) that fall outside the window and freeing their
 associated cuckoo table entries and stable array slots back to the freelist.
 
-## Matching Engine (planned)
 
-Will consume order book state and parsed Add/Cancel/Replace/Execute messages to
-reconstruct trade matching, verified against a Python and/or C++ reference model
-(reusing the same "RTL vs. independent reference" verification approach used for
-the parser).
 
 ## Repo layout
 ```
