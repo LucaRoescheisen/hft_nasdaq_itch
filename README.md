@@ -71,8 +71,7 @@ matching order.
 - **Cuckoo hash table** — maps order reference number → stable array index.
   Each order reference number is hashed twice using a Toeplitz hash, giving two
   candidate table addresses (standard cuckoo hashing). Each table entry stores
-  the stable array index of the order, plus the stable array index of the next
-  order at the same price level (used to maintain FIFO order — see below).
+  the stable array index of the order.
 - **Price-level arrays (buy/sell)** — 32 levels per side. Each level stores the
   order reference number of the FIFO head, the price, and the total share
   count resting at that level.
@@ -81,22 +80,11 @@ matching order.
 
 1. New order arrives from the parser.
 2. Freelist pop → get a free stable array index.
-3. Store the order (reference number, price, shares) at that index.
+3. Store the order (price, shares) at that index.
 4. Hash the order reference number (Toeplitz, two hash outputs) → insert into
    the cuckoo table at one of the two candidate addresses, recording the
-   stable array index and linking it as the new tail at its price level.
+   stable array index.
 
-### FIFO traversal at a price level
-
-Each price level array stores only the *head* order reference number, not the
-full queue. To walk the queue in FIFO order:
-1. Hash the current order reference number → look up its cuckoo table entry.
-2. The entry gives the stable array index (order details) and the stable array
-   index of the *next* order at that price level.
-3. Repeat to walk further down the queue.
-
-This keeps the price-level arrays small (just head pointers) while still
-supporting full FIFO ordering via the hash-linked chain.
 
 ### Deletion
 
@@ -104,7 +92,7 @@ On an Order Delete/Cancel:
 1. Hash the order reference number → find its cuckoo table entry.
 2. Remove the entry from the cuckoo table and return its stable array index to
    the freelist.
-3. Update the price level's head pointer / share total accordingly.
+
 
 ### Price-level window management
 
