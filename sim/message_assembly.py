@@ -17,26 +17,6 @@ class NIC_TX:
     frame: int
 
 
-def return_length(val_int):
-    val = chr(val_int)
-    if val == "A":
-        return 36
-    elif val == "F":
-        return 40
-    elif val == "E":
-        return 31
-    elif val == "C":
-        return 36
-    elif val == "X":
-        return 23
-    elif val == "D":
-        return 19
-    elif val == "U":
-        return 35
-    else:
-        return 0
-
-
 class Assembly_Line:
     def __init__(self):
         self.buffer = bytearray()
