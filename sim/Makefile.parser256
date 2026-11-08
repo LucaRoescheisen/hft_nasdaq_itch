@@ -1,0 +1,13 @@
+SIM = verilator
+TOPLEVEL_LANG = verilog
+
+VERILOG_SOURCES = \
+    $(PWD)/../rtl/message_pckg.sv \
+		$(PWD)/../rtl/parser256.sv
+
+TOPLEVEL = parser256
+MODULE = tests.test_parser256
+COMPILE_ARGS = +define+DEBUG
+EXTRA_ARGS += --sv --trace
+WAVES = 1
+include $(shell cocotb-config --makefiles)/Makefile.sim

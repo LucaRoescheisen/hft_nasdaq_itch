@@ -19,3 +19,5 @@ pyrightconfig.json
 sim/dump.gtkw
 commands.txt
 sim/__pycache__
+vivado_env/
+sim/dump.surf.ron

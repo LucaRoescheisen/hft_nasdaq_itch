@@ -35,9 +35,10 @@ class Assembly_Line:
         self.buffer.extend(data)
 
     def process(self):
-        for _ in range(2):
+        count = 0
+        for i in range(2):
             if len(self.buffer) < 2:
-                return
+                break
 
             msg_len = int.from_bytes(self.buffer[:2], "big")
 
@@ -48,7 +49,7 @@ class Assembly_Line:
                 raise ValueError("Zero length message error")
             total_len = 2 + msg_len
             if len(self.buffer) < total_len:
-                return
+                break
 
             msg_body = bytes(self.buffer[2:total_len])
             del self.buffer[:total_len]
@@ -56,8 +57,11 @@ class Assembly_Line:
             print(
                 f"Extracted type={chr(msg_body[0])}, "
                 f"length={msg_len}, "
-                f"buffer remaining={len(self.buffer)}"
+                f"buffer remaining={len(self.buffer) * 8}"
             )
+            count = i + 1
+        print(f"Processed : {count}")
+        return count + 1
 
 
 def msg_extractor(raw):
@@ -101,7 +105,7 @@ def msg_extractor(raw):
     return frames
 
 
-def packets(path, limit=100000):
+def packets(path, limit=10):
     with RawPcapReader(path) as r:
         for i, (raw, _) in enumerate(r):
             if limit is not None and i >= limit:
